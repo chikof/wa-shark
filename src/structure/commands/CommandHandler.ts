@@ -4,23 +4,22 @@ import { Collection, SharkError, Util } from '../../util';
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
 
-interface SharkOptions {
+declare interface SharkOptions {
   directory: string;
   classToHandle?: Command;
   automateCategories?: any;
-  loadFilter?: any;
+  loadFilter?: () => boolean;
   blockClient?: boolean;
   storeMessages?: boolean;
   defaultCooldown?: number;
   ignoreCooldown?: any;
-  // argumentDefaults: { [key: string]: unknown };
   prefix?: any;
-  aliasReplacement: any;
+  aliasReplacement: string | RegExp;
 }
 
 export class CommandHandler extends SharkHandler {
   aliases: Collection<string, string>;
-  aliasReplacement: any;
+  aliasReplacement: string | RegExp;
   prefixes: Collection<any, any>;
   blockClient: boolean;
   storeMessages: boolean;
@@ -31,7 +30,7 @@ export class CommandHandler extends SharkHandler {
   inhibitorHandler: any;
   cooldowns: Collection<any, any>;
   constructor(client: WAConnection, options?: SharkOptions) {
-    super(client);
+    super(client, { directory: options.directory });
 
     if (
       options.classToHandle.constructor.prototype instanceof Command ||
@@ -130,7 +129,7 @@ export class CommandHandler extends SharkHandler {
     }
   }
 
-  deregister(command: Command) {
+  public deregister(command: Command) {
     for (let alias of command.aliases) {
       alias = alias.toLowerCase();
       this.aliases.delete(alias);
@@ -164,61 +163,7 @@ export class CommandHandler extends SharkHandler {
     super.deregister(command);
   }
 
-  // public async handle(message) {
-  //   try {
-  //     if (this.fetchMembers && message.guild && !message.member && !message.webhookID) {
-  //       await message.guild.members.fetch(message.author);
-  //     }
-
-  //     if (await this.runAllTypeInhibitors(message)) {
-  //       return false;
-  //     }
-
-  //     if (this.commandUtil) {
-  //       if (this.commandUtils.has(message.id)) {
-  //         message.util = this.commandUtils.get(message.id);
-  //       } else {
-  //         message.util = new CommandUtil(this, message);
-  //         this.commandUtils.set(message.id, message.util);
-  //       }
-  //     }
-
-  //     if (await this.runPreTypeInhibitors(message)) {
-  //       return false;
-  //     }
-
-  //     let parsed = await this.parseCommand(message);
-  //     if (!parsed.command) {
-  //       const overParsed = await this.parseCommandOverwrittenPrefixes(message);
-  //       if (overParsed.command || (parsed.prefix == null && overParsed.prefix != null)) {
-  //         parsed = overParsed;
-  //       }
-  //     }
-
-  //     if (this.commandUtil) {
-  //       message.util.parsed = parsed;
-  //     }
-
-  //     let ran;
-  //     if (!parsed.command) {
-  //       ran = await this.handleRegexAndConditionalCommands(message);
-  //     } else {
-  //       ran = await this.handleDirectCommand(message, parsed.content, parsed.command);
-  //     }
-
-  //     if (ran === false) {
-  //       this.emit(CommandHandlerEvents.MESSAGE_INVALID, message);
-  //       return false;
-  //     }
-
-  //     return ran;
-  //   } catch (err) {
-  //     this.emitError(err, message);
-  //     return null;
-  //   }
-  // }
-
-  runCooldowns(message: WAChatUpdate, command) {
+  public runCooldowns(message: WAChatUpdate, command) {
     const ignorer = command.ignoreCooldown || this.ignoreCooldown;
     const isIgnored = Array.isArray(ignorer)
       ? ignorer.includes(message.jid)

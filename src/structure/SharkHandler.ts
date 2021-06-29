@@ -8,7 +8,7 @@ import { Category, Collection, SharkError } from '../util';
 import { SharkModule } from './SharkModule';
 import Command from './commands/Command';
 
-export interface HandlerOptions {
+declare interface HandlerOptions {
   directory?: any;
   classToHandle?: Command;
   extensions?: string[];

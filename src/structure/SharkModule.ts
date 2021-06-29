@@ -2,7 +2,7 @@ import { WAConnection } from '@adiwajshing/baileys';
 import { Category, Collection } from '../util/';
 import SharkHandler from './SharkHandler';
 
-export interface ModuleOptions {
+declare interface ModuleOptions {
   category: string;
 }
 

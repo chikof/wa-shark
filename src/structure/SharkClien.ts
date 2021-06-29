@@ -1,6 +1,6 @@
 import { WAConnection, WAConnectOptions } from '@adiwajshing/baileys';
 
-interface SharkOptions {
+declare interface SharkOptions {
   ownerID: string | string[];
 }
 

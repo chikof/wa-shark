@@ -6,49 +6,39 @@ import { readdirSync, statSync } from 'fs';
 
 import { Category, Collection, SharkError } from '../util';
 import { SharkModule } from './SharkModule';
-import Command from './commands/Command';
-
-declare interface HandlerOptions {
-  directory?: any;
-  classToHandle?: Command;
-  extensions?: string[];
-  automateCategories?: boolean;
-  loadFilter?: () => boolean;
-}
-
-type LoadPredicate = (filepath: string) => boolean;
+import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 
 export class SharkHandler extends EventEmitter {
-  client: WAConnection;
-  directory: any;
-  classToHandle: Command;
-  extensions: Set<unknown>;
-  automateCategories: boolean;
-  loadFilter: () => boolean;
-  modules: Collection<any, any>;
-  categories: Collection<any, any>;
-  constructor(client: WAConnection, options?: HandlerOptions) {
+  public client: WAConnection;
+  public directory: string;
+  public classToHandle: SharkModule;
+  public extensions: Set<unknown>;
+  public automateCategories: boolean;
+  public loadfilter: () => boolean;
+  public modules: Collection<string, any>;
+  public categories: Collection<any, any>;
+
+  constructor(client: WAConnection, options?: SharkHandlerOptions) {
     super();
-    const { automateCategories, classToHandle, directory, extensions, loadFilter } = options;
 
     this.client = client;
 
-    this.directory = directory;
+    this.directory = options.directory;
 
-    this.classToHandle = classToHandle;
+    this.classToHandle = options.classToHandle;
 
-    this.extensions = new Set(extensions);
+    this.extensions = new Set(options.extensions);
 
-    this.automateCategories = Boolean(automateCategories);
+    this.automateCategories = Boolean(options.automateCategories);
 
-    this.loadFilter = loadFilter;
+    this.loadfilter = options.loadFilter;
 
     this.modules = new Collection();
 
     this.categories = new Collection();
   }
 
-  public register(module: Command, filePath: string) {
+  public register(module: SharkModule, filePath?: string) {
     module.filepath = filePath;
     module.client = this.client;
     module.handler = this;
@@ -105,12 +95,15 @@ export class SharkHandler extends EventEmitter {
 
   public loadAll(
     directory: string = this.directory,
-    filter: LoadPredicate = this.loadFilter || (() => true),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    filter: LoadPredicate = this.loadfilter || ((file?: string) => true),
   ) {
     const filepaths = this.readdirRecursive(directory);
     for (let filepath of filepaths) {
       filepath = resolve(filepath);
-      if (filter(filepath)) this.load(filepath);
+      if (filter(filepath)) {
+        this.load(filepath);
+      }
     }
 
     return this;

@@ -1,21 +1,21 @@
 {
     "compilerOptions": {
+        "target": "ESNext",
         "module": "commonjs",
+        "allowJs": true,
         "declaration": true,
-        "removeComments": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "target": "es2019",
-        "sourceMap": true,
         "outDir": "./dist",
-        "incremental": true,
-        "resolveJsonModule": true,
-        "esModuleInterop": true
+        "rootDir": "./src",
+        "strict": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "removeComments": true
     },
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
     ],
     "include": [
         "src"

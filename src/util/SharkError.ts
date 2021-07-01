@@ -32,7 +32,7 @@ type options =
 
 export class SharkError extends Error {
   code: string | number;
-  constructor(key: options, ...args: string[]) {
+  constructor(key: options, ...args: any[]) {
     if (Messages[key] == null) throw new TypeError(`Error key '${key}' does not exist`);
     const message = Messages[key as string](...args);
 

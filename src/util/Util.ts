@@ -72,3 +72,5 @@ export class Util {
     return null;
   }
 }
+
+export default Util;

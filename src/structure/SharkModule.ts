@@ -1,4 +1,5 @@
 import { WAConnection } from '@adiwajshing/baileys';
+
 import { Category, Collection } from '../util/';
 import SharkHandler from './SharkHandler';
 
@@ -7,20 +8,25 @@ declare interface ModuleOptions {
 }
 
 export class SharkModule {
-  id: string;
-  categoryID: string;
-  category: Collection<string, Category>;
-  filepath: string;
-  client: WAConnection;
-  handler: SharkHandler;
+  public id: string;
+  public categoryID: string;
+  public category: Collection<string, Category>;
+  public filepath: string;
+  public client: WAConnection;
+  public handler: SharkHandler;
 
   constructor(id: string, options: ModuleOptions) {
     this.id = id;
+
     this.categoryID = options.category;
+
     this.category = null;
+
     this.filepath = null;
+
     this.client = null;
-    this.handler = new SharkHandler(this.client);
+
+    this.handler = new SharkHandler(this.client, {});
   }
 
   public reload() {

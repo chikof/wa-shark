@@ -14,12 +14,14 @@ declare interface CommandOptions {
 }
 
 export class Command extends SharkModule {
-  aliases: string[] | [];
-  prefix: string | string[];
-  ownerOnly: boolean;
-  cooldown: number;
-  ratelimit: number;
-  lock: boolean;
+  public aliases: string[] | [];
+  public prefix: string | string[];
+  public ownerOnly: boolean;
+  public cooldown: number;
+  public ratelimit: number;
+  public lock: boolean;
+  public ignoreCooldown: any;
+
   constructor(id: string, options: CommandOptions) {
     super(id, { category: options.category });
 

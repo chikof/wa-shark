@@ -1,9 +1,8 @@
-import { WAConnection } from '@adiwajshing/baileys';
-
 import { EventEmitter } from 'events';
 
 import { Collection, SharkError, Util } from '../../util';
 import { SharkHandlerOptions } from '../../util/types';
+import SharkClient from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Listener } from './Listener';
 
@@ -13,7 +12,7 @@ export class ListenerHandler extends SharkHandler {
   public emitters: Collection<string, EventEmitter>;
   public declare modules: Collection<string, Listener>;
 
-  constructor(client: WAConnection, options?: SharkHandlerOptions) {
+  constructor(client: SharkClient, options?: SharkHandlerOptions) {
     super(client, {
       directory: options.directory,
       classToHandle: options.classToHandle || Listener,

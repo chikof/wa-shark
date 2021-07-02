@@ -1,5 +1,5 @@
-import { WAConnection } from '@adiwajshing/baileys';
 import { Category, Collection } from '../util/';
+import SharkClient from './SharkClient';
 import SharkHandler from './SharkHandler';
 declare interface ModuleOptions {
     category: string;
@@ -9,7 +9,7 @@ export declare class SharkModule {
     categoryID: string;
     category: Collection<string, Category>;
     filepath: string;
-    client: WAConnection;
+    client: SharkClient;
     handler: SharkHandler;
     constructor(id: string, options: ModuleOptions);
     reload(): any;

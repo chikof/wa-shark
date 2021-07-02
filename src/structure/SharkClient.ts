@@ -9,12 +9,13 @@ export interface SharkOptions {
 
 export class SharkClient extends WAConnection {
   public ownerID: string | string[];
-  session: string;
+  public session: string;
 
   constructor(options: SharkOptions, clientOptions?: WAConnectOptions) {
     super();
 
     this.ownerID = options.ownerID;
+
     if (clientOptions) this.connectOptions = clientOptions;
 
     this.session = options.session;

@@ -50,7 +50,7 @@ export class CommandHandler extends SharkHandler {
     }
     async handle(message) {
         const parsed = await this.parseCommand(message);
-        if (parsed.command) {
+        if (parsed.command && !this.cooldowns.has(message.messages.first.key.participant)) {
             this.runCommand(message, parsed.command, parsed.content);
         }
     }

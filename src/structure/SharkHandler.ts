@@ -1,5 +1,3 @@
-import { WAConnection } from '@adiwajshing/baileys';
-
 import { EventEmitter } from 'events';
 import { dirname, sep, extname, resolve, join } from 'path';
 import { readdirSync, statSync } from 'fs';
@@ -7,9 +5,10 @@ import { readdirSync, statSync } from 'fs';
 import { Category, Collection, SharkError } from '../util';
 import { SharkModule } from './SharkModule';
 import { LoadPredicate, SharkHandlerOptions } from '../util/types';
+import SharkClient from './SharkClient';
 
 export class SharkHandler extends EventEmitter {
-  public client: WAConnection;
+  public client: SharkClient;
   public directory: string;
   public classToHandle: SharkModule;
   public extensions: Set<unknown>;
@@ -18,7 +17,7 @@ export class SharkHandler extends EventEmitter {
   public modules: Collection<string, any>;
   public categories: Collection<any, any>;
 
-  constructor(client: WAConnection, options?: SharkHandlerOptions) {
+  constructor(client: SharkClient, options?: SharkHandlerOptions) {
     super();
 
     this.client = client;

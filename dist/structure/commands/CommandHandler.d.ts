@@ -1,6 +1,7 @@
-import { WAChatUpdate, WAConnection } from '@adiwajshing/baileys';
+import { WAChatUpdate } from '@adiwajshing/baileys';
 import { Collection } from '../../util';
 import { SharkHandlerOptions } from '../../util/types';
+import SharkClient from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
 declare interface SharkOptions {
@@ -24,7 +25,7 @@ export declare class CommandHandler extends SharkHandler {
     prefix: () => string | string[];
     inhibitorHandler: any;
     cooldowns: Collection<any, any>;
-    constructor(client: WAConnection, options?: SharkOptions & SharkHandlerOptions);
+    constructor(client: SharkClient, options?: SharkOptions & SharkHandlerOptions);
     setup(): void;
     handle(message: WAChatUpdate): Promise<void>;
     register(command: Command, filepath: string): void;
@@ -44,7 +45,7 @@ export declare class CommandHandler extends SharkHandler {
         afterPrefix: string;
         command?: undefined;
     } | {
-        command: any;
+        command: Command;
         prefix: string;
         alias: string;
         content: string;
@@ -63,7 +64,7 @@ export declare class CommandHandler extends SharkHandler {
         afterPrefix: string;
         command?: undefined;
     } | {
-        command: any;
+        command: Command;
         prefix: string;
         alias: string;
         content: string;
@@ -82,12 +83,12 @@ export declare class CommandHandler extends SharkHandler {
         afterPrefix: string;
         command?: undefined;
     } | {
-        command: any;
+        command: Command;
         prefix: string;
         alias: string;
         content: string;
         afterPrefix: string;
     };
-    findCommand(name: string): any;
+    findCommand(name: string): Command;
 }
 export {};

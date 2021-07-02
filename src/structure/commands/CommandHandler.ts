@@ -1,7 +1,8 @@
-import { WAChatUpdate, WAConnection } from '@adiwajshing/baileys';
+import { WAChatUpdate } from '@adiwajshing/baileys';
 
 import { Collection, SharkError, Util } from '../../util';
 import { SharkHandlerOptions } from '../../util/types';
+import SharkClient from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
 
@@ -30,7 +31,7 @@ export class CommandHandler extends SharkHandler {
   public inhibitorHandler: any;
   public cooldowns: Collection<any, any>;
 
-  constructor(client: WAConnection, options?: SharkOptions & SharkHandlerOptions) {
+  constructor(client: SharkClient, options?: SharkOptions & SharkHandlerOptions) {
     super(client, {
       directory: options.directory,
       extensions: options.extensions || ['.js', '.ts'],
@@ -87,7 +88,7 @@ export class CommandHandler extends SharkHandler {
 
   public async handle(message: WAChatUpdate) {
     const parsed = await this.parseCommand(message);
-    if (parsed.command) {
+    if (parsed.command && !this.cooldowns.has(message.messages.first.key.participant)) {
       this.runCommand(message, parsed.command, parsed.content);
     }
   }
@@ -302,6 +303,6 @@ export class CommandHandler extends SharkHandler {
   }
 
   public findCommand(name: string) {
-    return this.modules.get(this.aliases.get(name.toLowerCase()));
+    return this.modules.get(this.aliases.get(name.toLowerCase())) as Command;
   }
 }

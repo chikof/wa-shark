@@ -12,7 +12,7 @@ declare interface SharkOptions {
   storeMessages?: boolean;
   defaultCooldown?: number;
   ignoreCooldown?: () => string | string[];
-  prefix?: () => string | string[];
+  prefix: () => string | string[];
   aliasReplacement?: string | RegExp;
 }
 
@@ -274,8 +274,17 @@ export class CommandHandler extends SharkHandler {
     associatedCommands: Set<string> = null,
   ) {
     if (!message.messages) return;
-    const messageContent = message.messages.first.message.conversation;
+
+    const msg = message.messages.first.message;
+
+    const messageContent =
+      msg.conversation ??
+      (msg.extendedTextMessage && msg.extendedTextMessage.text) ??
+      (msg.imageMessage && msg.imageMessage.caption) ??
+      '';
+
     const lowerContent = messageContent.toLowerCase();
+
     if (!lowerContent.startsWith(prefix.toLowerCase())) {
       return {};
     }

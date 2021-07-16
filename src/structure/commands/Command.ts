@@ -1,26 +1,21 @@
 import { WAChatUpdate } from '@adiwajshing/baileys';
-import { SharkError } from '../../util';
-import SharkModule from '../SharkModule';
 
-declare interface CommandOptions {
-  alias: string[];
-  ownerOnly?: boolean;
-  category?: string;
-  cooldown?: number;
-  ratelimit?: number;
-  prefix?: string | string[];
-  lock?: boolean;
-  ignoreCooldown?: string | string[];
-}
+import { SharkModule } from '../SharkModule';
+
+import { SharkError } from '../../util';
+import { CommandOptions } from '../../util/types';
 
 export class Command extends SharkModule {
   public aliases: string[] | [];
+  public allowDM?: boolean;
+  public allowGroups?: boolean;
   public prefix: string | string[];
   public ownerOnly: boolean;
   public cooldown: number;
   public ratelimit: number;
   public lock: boolean;
   public ignoreCooldown: any;
+  public description: { [x: string]: any };
 
   constructor(id: string, options: CommandOptions) {
     super(id, { category: options.category });
@@ -36,6 +31,10 @@ export class Command extends SharkModule {
     this.prefix = options.prefix;
 
     this.lock = options.lock;
+
+    this.allowDM = typeof options.allowDM == 'boolean' ? options.allowDM : true;
+
+    this.allowGroups = typeof options.allowGroups == 'boolean' ? options.allowGroups : true;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

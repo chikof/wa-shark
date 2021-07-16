@@ -1,9 +1,9 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { Collection } from '../util';
 import { SharkModule } from './SharkModule';
-import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 import SharkClient from './SharkClient';
+import { Collection } from '../util';
+import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 export declare class SharkHandler extends EventEmitter {
     client: SharkClient;
     directory: string;
@@ -13,7 +13,9 @@ export declare class SharkHandler extends EventEmitter {
     loadfilter: () => boolean;
     modules: Collection<string, any>;
     categories: Collection<any, any>;
-    constructor(client: SharkClient, options?: SharkHandlerOptions);
+    constructor(client: SharkClient, options?: SharkHandlerOptions | {
+        [x: string]: any;
+    });
     register(module: SharkModule, filePath?: string): void;
     deregister(module: SharkModule): void;
     load(thing: string, isReload?: boolean): any;

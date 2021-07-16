@@ -2,10 +2,11 @@ import { EventEmitter } from 'events';
 import { dirname, sep, extname, resolve, join } from 'path';
 import { readdirSync, statSync } from 'fs';
 
-import { Category, Collection, SharkError } from '../util';
 import { SharkModule } from './SharkModule';
-import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 import SharkClient from './SharkClient';
+
+import { Category, Collection, SharkError } from '../util';
+import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 
 export class SharkHandler extends EventEmitter {
   public client: SharkClient;
@@ -17,8 +18,10 @@ export class SharkHandler extends EventEmitter {
   public modules: Collection<string, any>;
   public categories: Collection<any, any>;
 
-  constructor(client: SharkClient, options?: SharkHandlerOptions) {
+  constructor(client: SharkClient, options?: SharkHandlerOptions | { [x: string]: any }) {
     super();
+
+    options = options || {};
 
     this.client = client;
 

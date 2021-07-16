@@ -1,9 +1,7 @@
-import { Category, Collection } from '../util/';
-import SharkClient from './SharkClient';
-import SharkHandler from './SharkHandler';
-declare interface ModuleOptions {
-    category: string;
-}
+import { SharkClient } from './SharkClient';
+import { SharkHandler } from './SharkHandler';
+import { Category, Collection } from '../util';
+import { SharkModuleOptions } from '../util/types';
 export declare class SharkModule {
     id: string;
     categoryID: string;
@@ -11,7 +9,7 @@ export declare class SharkModule {
     filepath: string;
     client: SharkClient;
     handler: SharkHandler;
-    constructor(id: string, options: ModuleOptions);
+    constructor(id: string, options: SharkModuleOptions);
     reload(): any;
     remove(): any;
     toString(): string;

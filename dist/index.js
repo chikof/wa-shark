@@ -18,3 +18,5 @@ __exportStar(require("./structure/listeners/Listener"), exports);
 __exportStar(require("./structure/listeners/ListenerHandler"), exports);
 __exportStar(require("./structure/commands/Command"), exports);
 __exportStar(require("./structure/commands/CommandHandler"), exports);
+__exportStar(require("./structure/inhibitors/Inhibitor"), exports);
+__exportStar(require("./structure/inhibitors/InhibitorHandler"), exports);

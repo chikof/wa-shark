@@ -1,7 +1,7 @@
-import { Collection, SharkError, Util } from '../../util';
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
-const { intoArray, intoCallable, prefixCompare } = Util;
+import { Collection, SharkError, Util } from '../../util';
+const { intoArray, intoCallable, prefixCompare, flatMap } = Util;
 export class CommandHandler extends SharkHandler {
     aliases;
     aliasReplacement;
@@ -19,7 +19,7 @@ export class CommandHandler extends SharkHandler {
             directory: options.directory,
             extensions: options.extensions || ['.js', '.ts'],
         });
-        options.classToHandle = options.classToHandle ? options.classToHandle : Command;
+        options.classToHandle = options.classToHandle || Command;
         this.classToHandle = options.classToHandle;
         if (options.classToHandle.constructor.prototype instanceof Command ||
             this.classToHandle.constructor.prototype === Command) {
@@ -42,16 +42,31 @@ export class CommandHandler extends SharkHandler {
         this.setup();
     }
     setup() {
-        this.client.on('open', () => {
-            this.client.on('chat-update', async (m) => {
-                this.handle(m);
-            });
+        this.client.on('chat-update', async (m) => {
+            this.handle(m);
         });
     }
     async handle(message) {
-        const parsed = await this.parseCommand(message);
-        if (parsed.command && !this.cooldowns.has(message.messages.first.key.participant)) {
-            this.runCommand(message, parsed.command, parsed.content);
+        try {
+            let parsed = await this.parseCommand(message);
+            if (await this.runAllTypeInhibitors(message)) {
+                return false;
+            }
+            if (await this.runPreTypeInhibitors(message)) {
+                return false;
+            }
+            if (!parsed.command) {
+                const overParsed = await this.parseCommandOverwrittenPrefixes(message);
+                if (overParsed.command || (parsed.prefix == null && overParsed.prefix != null)) {
+                    parsed = overParsed;
+                }
+            }
+            if (parsed.command)
+                this.runCommand(message, parsed.command, parsed.content);
+        }
+        catch (err) {
+            this.emit('commandError', message);
+            return null;
         }
     }
     register(command, filepath) {
@@ -179,6 +194,8 @@ export class CommandHandler extends SharkHandler {
         return false;
     }
     async runCommand(message, command, args) {
+        if (await this.runPostTypeInhibitors(message, command))
+            return false;
         this.emit('commandStarted', message, command, args);
         const ret = await command.exec(message, args);
         this.emit('commandFinished', message, command, args, ret);
@@ -208,7 +225,14 @@ export class CommandHandler extends SharkHandler {
     parseWithPrefix(message, prefix, associatedCommands = null) {
         if (!message.messages)
             return;
-        const messageContent = message.messages.first.message.conversation;
+        const msg = message.messages.first.message;
+        if (!msg)
+            return;
+        const messageContent = msg.conversation ??
+            (msg.imageMessage && msg.imageMessage.caption) ??
+            (msg.videoMessage && msg.videoMessage.caption) ??
+            (msg.extendedTextMessage && msg.extendedTextMessage.text) ??
+            '';
         const lowerContent = messageContent.toLowerCase();
         if (!lowerContent.startsWith(prefix.toLowerCase())) {
             return {};
@@ -235,4 +259,74 @@ export class CommandHandler extends SharkHandler {
     findCommand(name) {
         return this.modules.get(this.aliases.get(name.toLowerCase()));
     }
+    async runAllTypeInhibitors(message) {
+        const reason = this.inhibitorHandler ? await this.inhibitorHandler.test('all', message) : null;
+        if (reason != null) {
+            this.emit('MESSAGE_BLOCKED', message, reason);
+        }
+        else if (this.blockClient &&
+            message.messages.first.key.participant === this.client.user.jid) {
+            this.emit('MESSAGE_BLOCKED', message, 'Client');
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+    async runPostTypeInhibitors(message, command) {
+        const msg = message.messages.first;
+        if (command.ownerOnly) {
+            const isOwner = this.client.isOwner(msg.key.participant);
+            if (!isOwner) {
+                this.emit('COMMAND_BLOCKED', message, command, 'Owner');
+                return true;
+            }
+        }
+        if (!command.allowGroups && msg.key.remoteJid.endsWith('@g.us')) {
+            this.emit('COMMAND_BLOCKED', message, command, 'Group');
+            return true;
+        }
+        if (!command.allowDM && !msg.key.remoteJid.endsWith('@g.us')) {
+            this.emit('COMMAND_BLOCKED', message, command, 'Private messages');
+            return true;
+        }
+        const reason = this.inhibitorHandler
+            ? await this.inhibitorHandler.test('post', message, command)
+            : null;
+        if (reason != null) {
+            this.emit('COMMAND_BLOCKED', message, command, reason);
+            return true;
+        }
+        if (this.runCooldowns(message, command)) {
+            return true;
+        }
+        return false;
+    }
+    async runPreTypeInhibitors(message) {
+        const reason = this.inhibitorHandler ? await this.inhibitorHandler.test('pre', message) : null;
+        if (reason != null) {
+            this.emit('MESSAGE_BLOCKED', message, reason);
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+    async parseCommandOverwrittenPrefixes(message) {
+        if (!this.prefixes.size) {
+            return {};
+        }
+        const promises = this.prefixes.map(async (cmds, provider) => {
+            const prefixes = intoArray(await intoCallable(provider)(message));
+            return prefixes.map((p) => [p, cmds]);
+        });
+        const pairs = flatMap(await Promise.all(promises), (x) => x);
+        pairs.sort(([a], [b]) => prefixCompare(a, b));
+        return this.parseMultiplePrefixes(message, pairs);
+    }
+    useInhibitorHandler(inhibitorHandler) {
+        this.inhibitorHandler = inhibitorHandler;
+        return this;
+    }
 }
+export default CommandHandler;

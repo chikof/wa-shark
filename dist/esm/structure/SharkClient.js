@@ -8,7 +8,7 @@ export class SharkClient extends WAConnection {
         this.ownerID = options.ownerID;
         if (clientOptions)
             this.connectOptions = clientOptions;
-        this.session = options.session;
+        this.session = options.sessionPath;
         if (existsSync(this.session)) {
             this.loadAuthInfo(this.session);
         }

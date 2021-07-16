@@ -1,12 +1,9 @@
 import { WAConnection, WAConnectOptions } from '@adiwajshing/baileys';
-export interface SharkOptions {
-    ownerID: string | string[];
-    session: string;
-}
+import { SharkClientOptions } from '../util/types';
 export declare class SharkClient extends WAConnection {
     ownerID: string | string[];
     session: string;
-    constructor(options: SharkOptions, clientOptions?: WAConnectOptions);
+    constructor(options: SharkClientOptions, clientOptions?: WAConnectOptions);
     isOwner(user: string): boolean;
 }
 export default SharkClient;

@@ -1,6 +1,6 @@
-import { Collection, SharkError, Util } from '../../util';
 import { SharkHandler } from '../SharkHandler';
 import { Listener } from './Listener';
+import { Collection, SharkError, Util } from '../../util';
 const { isEventEmitter } = Util;
 export class ListenerHandler extends SharkHandler {
     emitters;
@@ -13,7 +13,6 @@ export class ListenerHandler extends SharkHandler {
             loadFilter: options.loadFilter,
         });
         this.emitters = new Collection();
-        this.modules = new Collection();
         this.emitters.set('client', this.client);
     }
     register(listener, filepath) {
@@ -67,3 +66,4 @@ export class ListenerHandler extends SharkHandler {
         return this;
     }
 }
+export default ListenerHandler;

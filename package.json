@@ -1,15 +1,23 @@
 {
-  "name": "shark",
-  "version": "0.0.6",
-  "description": "",
-  "main": "index.js",
+  "name": "wa-shark",
+  "version": "0.0.7",
+  "description": "A simple framework for baileys.",
+  "main": "./dist/main.js",
+  "module": "./dist/esm/main.js",
+  "types": "./dist/main.d.ts",
   "scripts": {
     "build": "yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.json",
     "build:esm": "tsc -p tsconfig-esm.json"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "whatsapp",
+    "baileys",
+    "framework"
+  ],
+  "author": {
+    "name": "ChikoShidori"
+  },
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {

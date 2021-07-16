@@ -1,23 +1,18 @@
 {
-    "compilerOptions": {
-        "target": "ESNext",
-        "module": "commonjs",
-        "allowJs": true,
-        "declaration": true,
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "strict": false,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node",
-        "removeComments": true
-    },
-    "exclude": [
-        "node_modules",
-        "dist",
-    ],
-    "include": [
-        "src"
-    ]
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "commonjs",
+    "allowJs": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "removeComments": true
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["src"]
 }

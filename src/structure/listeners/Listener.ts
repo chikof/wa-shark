@@ -23,3 +23,5 @@ export class Listener extends SharkModule {
     throw new SharkError('NOT_IMPLEMENTED', this.constructor.name, 'exec');
   }
 }
+
+export default Listener;

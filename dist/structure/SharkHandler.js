@@ -16,6 +16,7 @@ class SharkHandler extends events_1.EventEmitter {
     categories;
     constructor(client, options) {
         super();
+        options = options || {};
         this.client = client;
         this.directory = options.directory;
         this.classToHandle = options.classToHandle;

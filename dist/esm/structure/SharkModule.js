@@ -1,4 +1,4 @@
-import SharkHandler from './SharkHandler';
+import { SharkHandler } from './SharkHandler';
 export class SharkModule {
     id;
     categoryID;
@@ -12,7 +12,7 @@ export class SharkModule {
         this.category = null;
         this.filepath = null;
         this.client = null;
-        this.handler = new SharkHandler(this.client, {});
+        this.handler = new SharkHandler(this.client);
     }
     reload() {
         return this.handler.reload(this.id);

@@ -1,19 +1,19 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Command = void 0;
+const SharkModule_1 = require("../SharkModule");
 const util_1 = require("../../util");
-const SharkModule_1 = __importDefault(require("../SharkModule"));
-class Command extends SharkModule_1.default {
+class Command extends SharkModule_1.SharkModule {
     aliases;
+    allowDM;
+    allowGroups;
     prefix;
     ownerOnly;
     cooldown;
     ratelimit;
     lock;
     ignoreCooldown;
+    description;
     constructor(id, options) {
         super(id, { category: options.category });
         this.aliases = options.alias || [];
@@ -22,6 +22,8 @@ class Command extends SharkModule_1.default {
         this.ratelimit = options.ratelimit;
         this.prefix = options.prefix;
         this.lock = options.lock;
+        this.allowDM = typeof options.allowDM == 'boolean' ? options.allowDM : true;
+        this.allowGroups = typeof options.allowGroups == 'boolean' ? options.allowGroups : true;
     }
     async exec(message, args) {
         throw new util_1.SharkError('NOT_IMPLEMENTED', this.constructor.name, 'exec');

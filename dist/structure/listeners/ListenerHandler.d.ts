@@ -1,10 +1,10 @@
 /// <reference types="node" />
 import { EventEmitter } from 'events';
-import { Collection } from '../../util';
-import { SharkHandlerOptions } from '../../util/types';
-import SharkClient from '../SharkClient';
+import { SharkClient } from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Listener } from './Listener';
+import { Collection } from '../../util';
+import { SharkHandlerOptions } from '../../util/types';
 export declare class ListenerHandler extends SharkHandler {
     emitters: Collection<string, EventEmitter>;
     modules: Collection<string, Listener>;
@@ -17,3 +17,4 @@ export declare class ListenerHandler extends SharkHandler {
         [x: string]: EventEmitter;
     }): this;
 }
+export default ListenerHandler;

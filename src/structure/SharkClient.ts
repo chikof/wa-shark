@@ -2,23 +2,20 @@ import { WAConnection, WAConnectOptions } from '@adiwajshing/baileys';
 
 import { existsSync, writeFileSync } from 'fs';
 
-export interface SharkOptions {
-  ownerID: string | string[];
-  session: string;
-}
+import { SharkClientOptions } from '../util/types';
 
 export class SharkClient extends WAConnection {
   public ownerID: string | string[];
   public session: string;
 
-  constructor(options: SharkOptions, clientOptions?: WAConnectOptions) {
+  constructor(options: SharkClientOptions, clientOptions?: WAConnectOptions) {
     super();
 
     this.ownerID = options.ownerID;
 
     if (clientOptions) this.connectOptions = clientOptions;
 
-    this.session = options.session;
+    this.session = options.sessionPath;
 
     if (existsSync(this.session)) {
       this.loadAuthInfo(this.session);

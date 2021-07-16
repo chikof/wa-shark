@@ -1,18 +1,10 @@
 import { WAChatUpdate } from '@adiwajshing/baileys';
-import { Collection } from '../../util';
-import { SharkHandlerOptions } from '../../util/types';
-import SharkClient from '../SharkClient';
+import { SharkClient } from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
-declare interface SharkOptions {
-    loadfilter?: () => boolean;
-    blockClient?: boolean;
-    storeMessages?: boolean;
-    defaultCooldown?: number;
-    ignoreCooldown?: () => string | string[];
-    prefix?: () => string | string[];
-    aliasReplacement?: string | RegExp;
-}
+import { InhibitorHandler } from '../inhibitors/InhibitorHandler';
+import { Collection } from '../../util';
+import { CommandHandlerOptions } from '../../util/types';
 export declare class CommandHandler extends SharkHandler {
     aliases: Collection<string, string>;
     aliasReplacement: string | RegExp;
@@ -23,15 +15,16 @@ export declare class CommandHandler extends SharkHandler {
     cooldown: Collection<unknown, unknown>;
     defaultCooldown: number;
     prefix: () => string | string[];
-    inhibitorHandler: any;
+    inhibitorHandler: InhibitorHandler;
     cooldowns: Collection<any, any>;
-    constructor(client: SharkClient, options?: SharkOptions & SharkHandlerOptions);
+    modules: Collection<string, Command>;
+    constructor(client: SharkClient, options?: CommandHandlerOptions);
     setup(): void;
-    handle(message: WAChatUpdate): Promise<void>;
+    handle(message: WAChatUpdate): Promise<boolean>;
     register(command: Command, filepath: string): void;
     deregister(command: Command): void;
     runCooldowns(message: WAChatUpdate, command: Command): boolean;
-    runCommand(message: WAChatUpdate, command: Command, args: any): Promise<void>;
+    runCommand(message: WAChatUpdate, command: Command, args: any): Promise<boolean>;
     parseCommand(message: WAChatUpdate): Promise<{
         prefix?: undefined;
         alias?: undefined;
@@ -90,5 +83,28 @@ export declare class CommandHandler extends SharkHandler {
         afterPrefix: string;
     };
     findCommand(name: string): Command;
+    runAllTypeInhibitors(message: WAChatUpdate): Promise<boolean>;
+    runPostTypeInhibitors(message: WAChatUpdate, command: Command): Promise<boolean>;
+    runPreTypeInhibitors(message: WAChatUpdate): Promise<boolean>;
+    parseCommandOverwrittenPrefixes(message: WAChatUpdate): Promise<{
+        prefix?: undefined;
+        alias?: undefined;
+        content?: undefined;
+        afterPrefix?: undefined;
+        command?: undefined;
+    } | {
+        prefix: string;
+        alias: string;
+        content: string;
+        afterPrefix: string;
+        command?: undefined;
+    } | {
+        command: Command;
+        prefix: string;
+        alias: string;
+        content: string;
+        afterPrefix: string;
+    }>;
+    useInhibitorHandler(inhibitorHandler: InhibitorHandler): this;
 }
-export {};
+export default CommandHandler;

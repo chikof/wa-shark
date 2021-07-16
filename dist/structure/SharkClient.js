@@ -11,7 +11,7 @@ class SharkClient extends baileys_1.WAConnection {
         this.ownerID = options.ownerID;
         if (clientOptions)
             this.connectOptions = clientOptions;
-        this.session = options.session;
+        this.session = options.sessionPath;
         if (fs_1.existsSync(this.session)) {
             this.loadAuthInfo(this.session);
         }

@@ -6,6 +6,7 @@ export declare class Listener extends SharkModule {
     emitter: string | EventEmitter;
     event: string;
     type: string;
-    constructor(id: string, options?: ListenerOptions);
+    constructor(id: string, options: ListenerOptions);
     exec(...args: any[]): Promise<any>;
 }
+export default Listener;

@@ -1,10 +1,10 @@
 {
   "name": "wa-shark",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A simple framework for baileys.",
-  "main": "./dist/main.js",
-  "module": "./dist/esm/main.js",
-  "types": "./dist/main.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.json",

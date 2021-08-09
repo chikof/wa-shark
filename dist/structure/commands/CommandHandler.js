@@ -68,7 +68,7 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
                 this.runCommand(message, parsed.command, parsed.content);
         }
         catch (err) {
-            this.emit('commandError', message);
+            this.emit('COMMAND_ERROR', message);
             return null;
         }
     }
@@ -157,18 +157,20 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
     }
     runCooldowns(message, command) {
         const ignorer = command.ignoreCooldown || this.ignoreCooldown;
+        const id = /@s.whatsapp.net/g.test(message.jid)
+            ? message.jid
+            : message.messages.first.participant;
         const isIgnored = Array.isArray(ignorer)
             ? ignorer.includes(message.jid)
             : typeof ignorer === 'function'
                 ? ignorer(message, command)
-                : message.jid === ignorer;
+                : id === ignorer;
         if (isIgnored)
             return false;
         const time = command.cooldown != null ? command.cooldown : this.defaultCooldown;
         if (!time)
             return false;
         const endTime = Date.now() - 100 + time;
-        const id = message.jid;
         if (!this.cooldowns.has(id))
             this.cooldowns.set(id, {});
         if (!this.cooldowns.get(id)[command.id]) {
@@ -190,7 +192,7 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
         if (entry.uses >= command.ratelimit) {
             const end = this.cooldowns.get(message.jid)[command.id].end;
             const diff = end - Date.now() - 100;
-            this.emit('cooldown', message, command, diff);
+            this.emit('COMMAND_COOLDOWN', message, command, diff);
             return true;
         }
         entry.uses++;
@@ -199,9 +201,9 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
     async runCommand(message, command, args) {
         if (await this.runPostTypeInhibitors(message, command))
             return false;
-        this.emit('commandStarted', message, command, args);
+        this.emit('COMMAND_STARTED', message, command, args);
         const ret = await command.exec(message, args);
-        this.emit('commandFinished', message, command, args, ret);
+        this.emit('COMMAND_FINISHED', message, command, args, ret);
     }
     async parseCommand(message) {
         let prefixes = intoArray(await intoCallable(this.prefix)(message));
@@ -278,8 +280,9 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
     }
     async runPostTypeInhibitors(message, command) {
         const msg = message.messages.first;
+        const id = /@s.whatsapp.net/g.test(message.jid) ? message.jid : msg.participant;
         if (command.ownerOnly) {
-            const isOwner = this.client.isOwner(msg.key.participant);
+            const isOwner = this.client.isOwner(id);
             if (!isOwner) {
                 this.emit('COMMAND_BLOCKED', message, command, 'Owner');
                 return true;

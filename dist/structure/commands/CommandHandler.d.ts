@@ -3,7 +3,7 @@ import { SharkClient } from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
 import { InhibitorHandler } from '../inhibitors/InhibitorHandler';
-import { Collection } from '../../util';
+import { Category, Collection } from '../../util';
 import { CommandHandlerOptions } from '../../util/types';
 export declare class CommandHandler extends SharkHandler {
     aliases: Collection<string, string>;
@@ -18,6 +18,7 @@ export declare class CommandHandler extends SharkHandler {
     inhibitorHandler: InhibitorHandler;
     cooldowns: Collection<any, any>;
     modules: Collection<string, Command>;
+    categories: Collection<string, Category>;
     constructor(client: SharkClient, options?: CommandHandlerOptions);
     setup(): void;
     handle(message: WAChatUpdate): Promise<boolean>;

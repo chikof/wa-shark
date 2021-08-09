@@ -6,7 +6,7 @@ import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
 import { InhibitorHandler } from '../inhibitors/InhibitorHandler';
 
-import { Collection, SharkError, Util } from '../../util';
+import { Category, Collection, SharkError, Util } from '../../util';
 import { CommandHandlerOptions } from '../../util/types';
 
 const { intoArray, intoCallable, prefixCompare, flatMap } = Util;
@@ -24,6 +24,7 @@ export class CommandHandler extends SharkHandler {
   public inhibitorHandler: InhibitorHandler;
   public cooldowns: Collection<any, any>;
   public declare modules: Collection<string, Command>;
+  public declare categories: Collection<string, Category>;
 
   constructor(client: SharkClient, options?: CommandHandlerOptions) {
     super(client, {
@@ -99,7 +100,7 @@ export class CommandHandler extends SharkHandler {
 
       if (parsed.command) this.runCommand(message, parsed.command, parsed.content);
     } catch (err) {
-      this.emit('commandError', message);
+      this.emit('COMMAND_ERROR', message);
       return null;
     }
   }
@@ -193,11 +194,16 @@ export class CommandHandler extends SharkHandler {
 
   public runCooldowns(message: WAChatUpdate, command: Command) {
     const ignorer = command.ignoreCooldown || this.ignoreCooldown;
+
+    const id = /@s.whatsapp.net/g.test(message.jid)
+      ? message.jid
+      : message.messages.first.participant;
+
     const isIgnored = Array.isArray(ignorer)
       ? ignorer.includes(message.jid)
       : typeof ignorer === 'function'
       ? ignorer(message, command)
-      : message.jid === ignorer;
+      : id === ignorer;
 
     if (isIgnored) return false;
 
@@ -206,7 +212,6 @@ export class CommandHandler extends SharkHandler {
 
     const endTime = Date.now() - 100 + time;
 
-    const id = message.jid;
     if (!this.cooldowns.has(id)) this.cooldowns.set(id, {});
 
     if (!this.cooldowns.get(id)[command.id]) {
@@ -233,7 +238,7 @@ export class CommandHandler extends SharkHandler {
       const end = this.cooldowns.get(message.jid)[command.id].end;
       const diff = end - Date.now() - 100;
 
-      this.emit('cooldown', message, command, diff);
+      this.emit('COMMAND_COOLDOWN', message, command, diff);
       return true;
     }
 
@@ -243,9 +248,9 @@ export class CommandHandler extends SharkHandler {
 
   async runCommand(message: WAChatUpdate, command: Command, args: any) {
     if (await this.runPostTypeInhibitors(message, command)) return false;
-    this.emit('commandStarted', message, command, args);
+    this.emit('COMMAND_STARTED', message, command, args);
     const ret = await command.exec(message, args);
-    this.emit('commandFinished', message, command, args, ret);
+    this.emit('COMMAND_FINISHED', message, command, args, ret);
   }
 
   public async parseCommand(message: WAChatUpdate) {
@@ -349,8 +354,9 @@ export class CommandHandler extends SharkHandler {
 
   public async runPostTypeInhibitors(message: WAChatUpdate, command: Command) {
     const msg = message.messages.first;
+    const id = /@s.whatsapp.net/g.test(message.jid) ? message.jid : msg.participant;
     if (command.ownerOnly) {
-      const isOwner = this.client.isOwner(msg.key.participant);
+      const isOwner = this.client.isOwner(id);
 
       if (!isOwner) {
         this.emit('COMMAND_BLOCKED', message, command, 'Owner');

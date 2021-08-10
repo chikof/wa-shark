@@ -1,6 +1,6 @@
 {
   "name": "wa-shark",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A simple framework for baileys.",
   "main": "./dist/index.js",
   "module": "./dist/esm/index.js",

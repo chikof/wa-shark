@@ -187,7 +187,7 @@ export class CommandHandler extends SharkHandler {
         }
         const entry = this.cooldowns.get(id)[command.id];
         if (entry.uses >= command.ratelimit) {
-            const end = this.cooldowns.get(message.jid)[command.id].end;
+            const end = this.cooldowns.get(id)[command.id].end;
             const diff = end - Date.now() - 100;
             this.emit('COMMAND_COOLDOWN', message, command, diff);
             return true;

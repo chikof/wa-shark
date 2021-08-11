@@ -20,6 +20,7 @@ class Command extends SharkModule_1.SharkModule {
         this.cooldown = options.cooldown;
         this.ratelimit = options.ratelimit;
         this.prefix = options.prefix;
+        this.description = options.description;
         this.allowDM = typeof options.allowDM == 'boolean' ? options.allowDM : true;
         this.allowGroups = typeof options.allowGroups == 'boolean' ? options.allowGroups : true;
     }

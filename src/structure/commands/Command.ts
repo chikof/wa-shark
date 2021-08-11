@@ -29,6 +29,8 @@ export class Command extends SharkModule {
 
     this.prefix = options.prefix;
 
+    this.description = options.description;
+
     this.allowDM = typeof options.allowDM == 'boolean' ? options.allowDM : true;
 
     this.allowGroups = typeof options.allowGroups == 'boolean' ? options.allowGroups : true;

@@ -1,16 +1,15 @@
 import { WAChatUpdate } from '@adiwajshing/baileys';
 import { SharkModule } from '../SharkModule';
-import { CommandOptions } from '../../util/types';
+import { CommandOptions, IgnoreCheckPredicate } from '../../util/types';
 export declare class Command extends SharkModule {
     aliases: string[] | [];
-    allowDM?: boolean;
-    allowGroups?: boolean;
+    allowDM: boolean;
+    allowGroups: boolean;
     prefix: string | string[];
     ownerOnly: boolean;
     cooldown: number;
     ratelimit: number;
-    lock: boolean;
-    ignoreCooldown: any;
+    ignoreCooldown: string | string[] | IgnoreCheckPredicate;
     description: {
         [x: string]: any;
     };

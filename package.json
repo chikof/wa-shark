@@ -1,6 +1,6 @@
 {
   "name": "wa-shark",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A simple framework for baileys.",
   "main": "./dist/index.js",
   "module": "./dist/esm/index.js",
@@ -9,6 +9,14 @@
     "build": "yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.json",
     "build:esm": "tsc -p tsconfig-esm.json"
+  },
+  "homepage": "https://github.com/ChikoShidori/wa-shark#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chikoshidori/wa-shark"
+  },
+  "bugs": {
+    "url": "https://github.com/chikoshidori/wa-shark/issues"
   },
   "keywords": [
     "whatsapp",

@@ -5,12 +5,13 @@ import { SharkClient } from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Inhibitor } from './Inhibitor';
 
-import { Collection, SharkError, Util } from '../../util';
+import { Category, Collection, SharkError, Util } from '../../util';
 import { SharkHandlerOptions } from '../../util/types';
 
 const { isPromise } = Util;
 
 export class InhibitorHandler extends SharkHandler {
+  public declare categories: Collection<string, Category<string, Inhibitor>>;
   public declare modules: Collection<string, Inhibitor>;
 
   constructor(client: SharkClient, options?: SharkHandlerOptions) {

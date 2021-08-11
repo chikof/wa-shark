@@ -1,6 +1,6 @@
+import { WAChatUpdate } from '@adiwajshing/baileys';
 import { EventEmitter } from 'events';
-
-export type LoadPredicate = (filepath?: string) => boolean;
+import { Command } from '../..';
 
 export interface SharkModuleOptions {
   category?: string;
@@ -31,16 +31,15 @@ export interface CommandOptions extends SharkModuleOptions {
   allowDM?: boolean;
   allowGroups?: boolean;
   cooldown?: number;
-  ignoreCooldown?: string | string[];
-  lock?: boolean;
+  ignoreCooldown?: string | string[] | IgnoreCheckPredicate;
   ratelimit?: number;
   ownerOnly?: boolean;
   prefix?: string | string[];
-  description: { [x: string]: any };
+  description?: { [x: string]: any };
 }
 
 export interface SharkClientOptions {
-  ownerID: string | string[];
+  ownerID?: string | string[];
   sessionPath: string;
 }
 
@@ -48,7 +47,29 @@ export interface CommandHandlerOptions extends SharkHandlerOptions {
   blockClient?: boolean;
   storeMessages?: boolean;
   defaultCooldown?: number;
-  ignoreCooldown?: () => string | string[];
-  prefix: () => string | string[];
+  ignoreCooldown?: string | string[] | IgnoreCooldownFuntion;
+  prefix: string | string[] | Prefix;
   aliasReplacement?: string | RegExp;
 }
+
+export interface ParsedComponentData {
+  afterPrefix?: string;
+  alias?: string;
+  command?: Command;
+  content?: string;
+  prefix?: string;
+}
+
+export interface CooldownData {
+  end: number;
+  timer: NodeJS.Timer;
+  uses: number;
+}
+
+export type IgnoreCheckPredicate = (message: WAChatUpdate, command: Command) => boolean;
+
+export type Prefix = (message: WAChatUpdate) => string | string[];
+
+export type IgnoreCooldownFuntion = (message: WAChatUpdate) => string | string[];
+
+export type LoadPredicate = (filepath?: string) => boolean;

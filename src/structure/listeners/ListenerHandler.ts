@@ -4,13 +4,15 @@ import { SharkClient } from '../SharkClient';
 import { SharkHandler } from '../SharkHandler';
 import { Listener } from './Listener';
 
-import { Collection, SharkError, Util } from '../../util';
+import { Category, Collection, SharkError, Util } from '../../util';
 import { SharkHandlerOptions } from '../../util/types';
 
 const { isEventEmitter } = Util;
 export class ListenerHandler extends SharkHandler {
   public emitters: Collection<string, EventEmitter>;
+
   public declare modules: Collection<string, Listener>;
+  public declare categories: Collection<string, Category<string, Listener>>;
 
   constructor(client: SharkClient, options?: SharkHandlerOptions) {
     super(client, {

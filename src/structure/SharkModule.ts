@@ -1,13 +1,13 @@
 import { SharkClient } from './SharkClient';
 import { SharkHandler } from './SharkHandler';
 
-import { Category, Collection } from '../util';
+import { Category } from '../util';
 import { SharkModuleOptions } from '../util/types';
 
 export class SharkModule {
   public id: string;
   public categoryID: string;
-  public category: Collection<string, Category>;
+  public category: Category<string, SharkModule>;
   public filepath: string;
   public client: SharkClient;
   public handler: SharkHandler;

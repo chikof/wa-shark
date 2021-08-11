@@ -3,18 +3,17 @@ import { WAChatUpdate } from '@adiwajshing/baileys';
 import { SharkModule } from '../SharkModule';
 
 import { SharkError } from '../../util';
-import { CommandOptions } from '../../util/types';
+import { CommandOptions, IgnoreCheckPredicate } from '../../util/types';
 
 export class Command extends SharkModule {
   public aliases: string[] | [];
-  public allowDM?: boolean;
-  public allowGroups?: boolean;
+  public allowDM: boolean;
+  public allowGroups: boolean;
   public prefix: string | string[];
   public ownerOnly: boolean;
   public cooldown: number;
   public ratelimit: number;
-  public lock: boolean;
-  public ignoreCooldown: any;
+  public ignoreCooldown: string | string[] | IgnoreCheckPredicate;
   public description: { [x: string]: any };
 
   constructor(id: string, options: CommandOptions) {
@@ -29,8 +28,6 @@ export class Command extends SharkModule {
     this.ratelimit = options.ratelimit;
 
     this.prefix = options.prefix;
-
-    this.lock = options.lock;
 
     this.allowDM = typeof options.allowDM == 'boolean' ? options.allowDM : true;
 

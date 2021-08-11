@@ -7,9 +7,7 @@ export class CommandHandler extends SharkHandler {
     aliasReplacement;
     prefixes;
     blockClient;
-    storeMessages;
     ignoreCooldown;
-    cooldown;
     defaultCooldown;
     prefix;
     inhibitorHandler;
@@ -29,8 +27,6 @@ export class CommandHandler extends SharkHandler {
         this.aliasReplacement = options.aliasReplacement;
         this.prefixes = new Collection();
         this.blockClient = Boolean(options.blockClient);
-        this.storeMessages = Boolean(options.storeMessages);
-        this.cooldown = new Collection();
         this.cooldowns = new Collection();
         this.defaultCooldown = options.defaultCooldown;
         this.ignoreCooldown =
@@ -42,7 +38,7 @@ export class CommandHandler extends SharkHandler {
         this.setup();
     }
     setup() {
-        this.client.on('chat-update', async (m) => {
+        this.client.on('chat-update', (m) => {
             this.handle(m);
         });
     }
@@ -113,7 +109,7 @@ export class CommandHandler extends SharkHandler {
                 }
             }
             if (newEntry) {
-                this.prefixes = this.prefixes.sort((aVal, bVal, aKey, bKey) => prefixCompare(aKey, bKey));
+                this.prefixes = this.prefixes.sort((_aVal, _bVal, aKey, bKey) => prefixCompare(aKey, bKey));
             }
         }
     }
@@ -164,7 +160,7 @@ export class CommandHandler extends SharkHandler {
                 : id === ignorer;
         if (isIgnored)
             return false;
-        const time = command.cooldown != null ? command.cooldown : this.defaultCooldown;
+        const time = command.cooldown ?? this.defaultCooldown;
         if (!time)
             return false;
         const endTime = Date.now() - 100 + time;
@@ -285,11 +281,11 @@ export class CommandHandler extends SharkHandler {
                 return true;
             }
         }
-        if (!command.allowGroups && msg.key.remoteJid.endsWith('@g.us')) {
+        if (!command.allowGroups && message.jid.endsWith('@g.us')) {
             this.emit('COMMAND_BLOCKED', message, command, 'Group');
             return true;
         }
-        if (!command.allowDM && !msg.key.remoteJid.endsWith('@g.us')) {
+        if (!command.allowDM && !message.jid.endsWith('@g.us')) {
             this.emit('COMMAND_BLOCKED', message, command, 'Private messages');
             return true;
         }

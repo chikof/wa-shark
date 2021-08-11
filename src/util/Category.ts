@@ -7,9 +7,10 @@ import { Collection } from './Collection';
  * @param {Iterable} [iterable] - Entries to set.
  * @extends {Collection}
  */
-export class Category extends Collection<string, SharkModule> {
-  id: string;
-  constructor(id: string, iterable?: Iterable<any>) {
+export class Category<K extends string, V extends SharkModule> extends Collection<K, V> {
+  public id: string;
+
+  constructor(id: string, iterable?: Iterable<[K, V]>) {
     super(iterable);
 
     /**
@@ -23,7 +24,7 @@ export class Category extends Collection<string, SharkModule> {
    * Calls `reload()` on all items in this category.
    * @returns {Category}
    */
-  public reloadAll(): Category {
+  public reloadAll(): this {
     for (const m of Array.from(this.values())) {
       if (m.filepath) m.reload();
     }
@@ -35,7 +36,7 @@ export class Category extends Collection<string, SharkModule> {
    * Calls `remove()` on all items in this category.
    * @returns {Category}
    */
-  public removeAll(): Category {
+  public removeAll(): this {
     for (const m of Array.from(this.values())) {
       if (m.filepath) m.remove();
     }

@@ -2,17 +2,17 @@
 import { EventEmitter } from 'events';
 import { SharkModule } from './SharkModule';
 import SharkClient from './SharkClient';
-import { Collection } from '../util';
+import { Category, Collection } from '../util';
 import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 export declare class SharkHandler extends EventEmitter {
     client: SharkClient;
     directory: string;
-    classToHandle: SharkModule;
+    classToHandle: typeof SharkModule;
     extensions: Set<unknown>;
     automateCategories: boolean;
-    loadfilter: () => boolean;
-    modules: Collection<string, any>;
-    categories: Collection<any, any>;
+    loadfilter: LoadPredicate;
+    modules: Collection<string, SharkModule>;
+    categories: Collection<string, Category<string, SharkModule>>;
     constructor(client: SharkClient, options?: SharkHandlerOptions | {
         [x: string]: any;
     });
@@ -20,11 +20,11 @@ export declare class SharkHandler extends EventEmitter {
     deregister(module: SharkModule): void;
     load(thing: string, isReload?: boolean): any;
     loadAll(directory?: string, filter?: LoadPredicate): this;
-    remove(id: string): any;
+    remove(id: string): SharkModule;
     removeAll(): this;
     reload(id: string): any;
     reloadAll(): this;
-    findCategory(name: string): any;
+    findCategory(name: string): Category<string, SharkModule>;
     private readdirRecursive;
 }
 export default SharkHandler;

@@ -7,24 +7,29 @@ import { Command } from './Command';
 import { InhibitorHandler } from '../inhibitors/InhibitorHandler';
 
 import { Category, Collection, SharkError, Util } from '../../util';
-import { CommandHandlerOptions } from '../../util/types';
+import {
+  CommandHandlerOptions,
+  CooldownData,
+  IgnoreCooldownFuntion,
+  ParsedComponentData,
+  Prefix,
+} from '../../util/types';
 
 const { intoArray, intoCallable, prefixCompare, flatMap } = Util;
 
 export class CommandHandler extends SharkHandler {
   public aliases: Collection<string, string>;
   public aliasReplacement: string | RegExp;
-  public prefixes: Collection<any, any>;
+  public prefixes: Collection<string, Set<string>>;
   public blockClient: boolean;
-  public storeMessages: boolean;
-  public ignoreCooldown: () => string | string[];
-  public cooldown: Collection<unknown, unknown>;
+  public ignoreCooldown: string | string[] | IgnoreCooldownFuntion;
   public defaultCooldown: number;
-  public prefix: () => string | string[];
+  public prefix: string | string[] | Prefix;
   public inhibitorHandler: InhibitorHandler;
-  public cooldowns: Collection<any, any>;
+  public cooldowns: Collection<string, { [id: string]: CooldownData }>;
+
   public declare modules: Collection<string, Command>;
-  public declare categories: Collection<string, Category>;
+  public declare categories: Collection<string, Category<string, Command>>;
 
   constructor(client: SharkClient, options?: CommandHandlerOptions) {
     super(client, {
@@ -53,10 +58,6 @@ export class CommandHandler extends SharkHandler {
 
     this.blockClient = Boolean(options.blockClient);
 
-    this.storeMessages = Boolean(options.storeMessages);
-
-    this.cooldown = new Collection();
-
     this.cooldowns = new Collection();
 
     this.defaultCooldown = options.defaultCooldown;
@@ -74,7 +75,7 @@ export class CommandHandler extends SharkHandler {
   }
 
   public setup() {
-    this.client.on('chat-update', async (m) => {
+    this.client.on('chat-update', (m) => {
       this.handle(m);
     });
   }
@@ -151,7 +152,7 @@ export class CommandHandler extends SharkHandler {
       }
 
       if (newEntry) {
-        this.prefixes = this.prefixes.sort((aVal, bVal, aKey, bKey) => prefixCompare(aKey, bKey));
+        this.prefixes = this.prefixes.sort((_aVal, _bVal, aKey, bKey) => prefixCompare(aKey, bKey));
       }
     }
   }
@@ -207,7 +208,7 @@ export class CommandHandler extends SharkHandler {
 
     if (isIgnored) return false;
 
-    const time = command.cooldown != null ? command.cooldown : this.defaultCooldown;
+    const time = command.cooldown ?? this.defaultCooldown;
     if (!time) return false;
 
     const endTime = Date.now() - 100 + time;
@@ -269,7 +270,10 @@ export class CommandHandler extends SharkHandler {
     );
   }
 
-  public parseMultiplePrefixes(message: WAChatUpdate, pairs: any[]) {
+  public parseMultiplePrefixes(
+    message: WAChatUpdate,
+    pairs: [string, Set<string> | null][],
+  ): ParsedComponentData {
     const parses = pairs.map(([prefix, cmds]) => this.parseWithPrefix(message, prefix, cmds));
     const result = parses.find((parsed) => parsed && parsed.command);
 
@@ -364,12 +368,12 @@ export class CommandHandler extends SharkHandler {
       }
     }
 
-    if (!command.allowGroups && msg.key.remoteJid.endsWith('@g.us')) {
+    if (!command.allowGroups && message.jid.endsWith('@g.us')) {
       this.emit('COMMAND_BLOCKED', message, command, 'Group');
       return true;
     }
 
-    if (!command.allowDM && !msg.key.remoteJid.endsWith('@g.us')) {
+    if (!command.allowDM && !message.jid.endsWith('@g.us')) {
       this.emit('COMMAND_BLOCKED', message, command, 'Private messages');
       return true;
     }

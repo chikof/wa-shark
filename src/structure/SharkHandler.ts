@@ -11,12 +11,12 @@ import { LoadPredicate, SharkHandlerOptions } from '../util/types';
 export class SharkHandler extends EventEmitter {
   public client: SharkClient;
   public directory: string;
-  public classToHandle: SharkModule;
+  public classToHandle: typeof SharkModule;
   public extensions: Set<unknown>;
   public automateCategories: boolean;
-  public loadfilter: () => boolean;
-  public modules: Collection<string, any>;
-  public categories: Collection<any, any>;
+  public loadfilter: LoadPredicate;
+  public modules: Collection<string, SharkModule>;
+  public categories: Collection<string, Category<string, SharkModule>>;
 
   constructor(client: SharkClient, options?: SharkHandlerOptions | { [x: string]: any }) {
     super();
@@ -151,7 +151,7 @@ export class SharkHandler extends EventEmitter {
   }
 
   public findCategory(name: string) {
-    return this.categories.find((category: Category) => {
+    return this.categories.find((category) => {
       return category.id.toLowerCase() === name.toLowerCase();
     });
   }

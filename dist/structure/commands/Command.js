@@ -11,7 +11,6 @@ class Command extends SharkModule_1.SharkModule {
     ownerOnly;
     cooldown;
     ratelimit;
-    lock;
     ignoreCooldown;
     description;
     constructor(id, options) {
@@ -21,7 +20,6 @@ class Command extends SharkModule_1.SharkModule {
         this.cooldown = options.cooldown;
         this.ratelimit = options.ratelimit;
         this.prefix = options.prefix;
-        this.lock = options.lock;
         this.allowDM = typeof options.allowDM == 'boolean' ? options.allowDM : true;
         this.allowGroups = typeof options.allowGroups == 'boolean' ? options.allowGroups : true;
     }

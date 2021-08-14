@@ -14,11 +14,11 @@ export class Inhibitor extends SharkModule {
   constructor(id: string, options?: InhibitorOptions) {
     super(id, { category: options.category });
 
-    this.reason = options.reason;
+    this.reason = options.reason || '';
 
-    this.type = options.type;
+    this.type = options.type || 'post';
 
-    this.priority = options.priority;
+    this.priority = options.priority || 0;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

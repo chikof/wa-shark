@@ -23,10 +23,9 @@ export class InhibitorHandler extends SharkHandler {
       loadFilter: options.loadFilter,
     });
 
-    options.classToHandle = options.classToHandle || Inhibitor;
-    this.classToHandle = options.classToHandle;
+    this.classToHandle = options.classToHandle || Inhibitor;
     if (
-      options.classToHandle.constructor.prototype instanceof Inhibitor ||
+      options.classToHandle?.constructor?.prototype instanceof Inhibitor ||
       this.classToHandle.constructor.prototype === Inhibitor
     ) {
       throw new SharkError(

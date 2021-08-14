@@ -1,6 +1,6 @@
 import { WAChatUpdate } from '@adiwajshing/baileys';
 import { EventEmitter } from 'events';
-import { Command } from '../..';
+import { Command, SharkModule } from '../..';
 
 export interface SharkModuleOptions {
   category?: string;
@@ -8,7 +8,7 @@ export interface SharkModuleOptions {
 
 export interface SharkHandlerOptions {
   automateCategories?: boolean;
-  classToHandle?: any;
+  classToHandle?: typeof SharkModule;
   directory: string;
   extensions?: string[] | Set<string>;
   loadFilter?: LoadPredicate;
@@ -22,7 +22,7 @@ export interface ListenerOptions extends SharkModuleOptions {
 
 export interface InhibitorOptions extends SharkModuleOptions {
   reason?: string;
-  type?: string;
+  type?: InhibitorTypes;
   priority?: number;
 }
 
@@ -66,6 +66,20 @@ export interface CooldownData {
   uses: number;
 }
 
+export enum CommandHandlerListeners {
+  COMMAND_ERROR = 'commandError',
+  COMMAND_COOLDOWN = 'commandCooldown',
+  COMMAND_STARTED = 'commandStarted',
+  COMMAND_FINISHED = 'commandFinished',
+  COMMAND_BLOCKED = 'commandBlocked',
+  MESSAGE_BLOCKED = 'messageBlocked',
+}
+
+export enum SharkHandlerListeners {
+  LOAD = 'load',
+  REMOVE = 'remove',
+}
+
 export type IgnoreCheckPredicate = (message: WAChatUpdate, command: Command) => boolean;
 
 export type Prefix = (message: WAChatUpdate) => string | string[];
@@ -73,3 +87,5 @@ export type Prefix = (message: WAChatUpdate) => string | string[];
 export type IgnoreCooldownFuntion = (message: WAChatUpdate) => string | string[];
 
 export type LoadPredicate = (filepath?: string) => boolean;
+
+export type InhibitorTypes = 'pre' | 'post' | 'all';

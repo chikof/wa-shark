@@ -12,18 +12,10 @@ export class SharkModule {
   public client: SharkClient;
   public handler: SharkHandler;
 
-  constructor(id: string, options: SharkModuleOptions) {
+  constructor(id: string, options?: SharkModuleOptions) {
     this.id = id;
 
     this.categoryID = options.category;
-
-    this.category = null;
-
-    this.filepath = null;
-
-    this.client = null;
-
-    this.handler = new SharkHandler(this.client);
   }
 
   public reload() {

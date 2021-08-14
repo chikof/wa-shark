@@ -6,7 +6,7 @@ import { SharkModule } from './SharkModule';
 import SharkClient from './SharkClient';
 
 import { Category, Collection, SharkError } from '../util';
-import { LoadPredicate, SharkHandlerOptions } from '../util/types';
+import { LoadPredicate, SharkHandlerListeners, SharkHandlerOptions } from '../util/types';
 
 export class SharkHandler extends EventEmitter {
   public client: SharkClient;
@@ -18,22 +18,20 @@ export class SharkHandler extends EventEmitter {
   public modules: Collection<string, SharkModule>;
   public categories: Collection<string, Category<string, SharkModule>>;
 
-  constructor(client: SharkClient, options?: SharkHandlerOptions | { [x: string]: any }) {
+  constructor(client: SharkClient, options?: SharkHandlerOptions) {
     super();
-
-    options = options || {};
 
     this.client = client;
 
-    this.directory = options.directory;
+    this.directory = options?.directory;
 
-    this.classToHandle = options.classToHandle;
+    this.classToHandle = options?.classToHandle;
 
-    this.extensions = new Set(options.extensions);
+    this.extensions = new Set(options?.extensions);
 
-    this.automateCategories = Boolean(options.automateCategories);
+    this.automateCategories = Boolean(options?.automateCategories);
 
-    this.loadfilter = options.loadFilter;
+    this.loadfilter = options?.loadFilter;
 
     this.modules = new Collection();
 
@@ -91,7 +89,7 @@ export class SharkHandler extends EventEmitter {
       throw new SharkError('ALREADY_LOADED', this.classToHandle.constructor.name, mod.id);
 
     this.register(mod, isClass ? null : thing);
-    this.emit('eventLoaded', mod, isReload);
+    this.emit(SharkHandlerListeners.LOAD, mod, isReload);
     return mod;
   }
 
@@ -117,7 +115,7 @@ export class SharkHandler extends EventEmitter {
 
     this.deregister(mod);
 
-    this.emit('removed', mod);
+    this.emit(SharkHandlerListeners.REMOVE, mod);
     return mod;
   }
 

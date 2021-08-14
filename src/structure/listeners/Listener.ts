@@ -12,7 +12,7 @@ export class Listener extends SharkModule {
   constructor(id: string, options: ListenerOptions) {
     super(id, { category: options.category });
 
-    this.emitter = options.emitter;
+    this.emitter = options.emitter || 'client';
 
     this.event = options.event || id;
 

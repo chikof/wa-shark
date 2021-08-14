@@ -3,6 +3,6 @@ node_modules
 
 .eslintrc.js
 .gitignore
-.prettirrc
-.tsconfig.json
-.tsconfig-esm.json
+.prettierrc
+tsconfig.json
+tsconfig-esm.json

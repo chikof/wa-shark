@@ -13,9 +13,7 @@ export declare class SharkHandler extends EventEmitter {
     loadfilter: LoadPredicate;
     modules: Collection<string, SharkModule>;
     categories: Collection<string, Category<string, SharkModule>>;
-    constructor(client: SharkClient, options?: SharkHandlerOptions | {
-        [x: string]: any;
-    });
+    constructor(client: SharkClient, options?: SharkHandlerOptions);
     register(module: SharkModule, filePath?: string): void;
     deregister(module: SharkModule): void;
     load(thing: string, isReload?: boolean): any;

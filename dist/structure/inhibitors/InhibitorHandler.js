@@ -14,9 +14,8 @@ class InhibitorHandler extends SharkHandler_1.SharkHandler {
             automateCategories: options.automateCategories,
             loadFilter: options.loadFilter,
         });
-        options.classToHandle = options.classToHandle || Inhibitor_1.Inhibitor;
-        this.classToHandle = options.classToHandle;
-        if (options.classToHandle.constructor.prototype instanceof Inhibitor_1.Inhibitor ||
+        this.classToHandle = options.classToHandle || Inhibitor_1.Inhibitor;
+        if (options.classToHandle?.constructor?.prototype instanceof Inhibitor_1.Inhibitor ||
             this.classToHandle.constructor.prototype === Inhibitor_1.Inhibitor) {
             throw new util_1.SharkError('INVALID_CLASS_TO_HANDLE', this.classToHandle.constructor.name, Inhibitor_1.Inhibitor.name);
         }

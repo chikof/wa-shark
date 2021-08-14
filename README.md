@@ -4,14 +4,31 @@
 
 ## Features
 
-- Nothing, just type update.
+- Fixed bug when reading a message replied with an attachment.
+- Example of inhibitor handler.
+- Below you can see the list of events.
 
 <br>
+
+# Emitters
+
+- Command Handler
+
+  - commandError
+  - commandCooldown
+  - commandStarted
+  - commandFinished
+  - commandBlocked
+  - messageBlocked
+
+- Global Handler
+  - load
+  - remove
 
 # Examples
 
 ```ts
-import { SharkClient, CommandHandler } from 'wa-shark';
+import { SharkClient, CommandHandler, InhibitorHandler } from 'wa-shark';
 import { join } from 'path';
 
 export class Client extends SharkClient {
@@ -23,11 +40,14 @@ export class Client extends SharkClient {
 
   public commandHandler: CommandHandler = new CommandHandler(this, {
     directory: join(__dirname, 'commands', 'path'),
+    prefix: '!',
   });
 
   public listenerHandler: ListenerHandler = new ListenerHandler(this, {
     directory: join(__dirname, 'listeners', 'path'),
   });
+
+  public inhibitorHandler: InhibitorHandler = new InhibitorHandler(this, {});
 
   private async _int(): Promise<void> {
     this.listenerHandler
@@ -37,7 +57,8 @@ export class Client extends SharkClient {
         process,
       })
       .loadAll();
-    this.commandHandler.loadAll();
+    this.commandHandler.useInhibitorHandler(this.inhibitorHandler).loadAll();
+    this.inhibitorHandler.loadAll();
   }
 
   public start(): Promise<void> {
@@ -86,3 +107,25 @@ export default class ReadyEvent extends Listener {
   }
 }
 ```
+
+```ts
+import { Inhibitor, Command } from 'wa-shark';
+import { WAChatUpdate } from '@adiwajshing/baileys';
+
+export default class TestInhibitor extends Inhibitor {
+  constructor() {
+    super('test', {
+      reason: 'Testing something.',
+    });
+  }
+
+  public async exec(message: WAChatUpdate, command: Command) {
+    const blacklist = ['some', 'jid'];
+    return blacklist.includes(message.jid);
+  }
+}
+```
+
+---
+
+## [Discord](https://discord.gg/HhybNhchcC)

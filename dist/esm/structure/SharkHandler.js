@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { dirname, sep, extname, resolve, join } from 'path';
 import { readdirSync, statSync } from 'fs';
 import { Category, Collection, SharkError } from '../util';
+import { SharkHandlerListeners } from '../util/types';
 export class SharkHandler extends EventEmitter {
     client;
     directory;
@@ -13,13 +14,12 @@ export class SharkHandler extends EventEmitter {
     categories;
     constructor(client, options) {
         super();
-        options = options || {};
         this.client = client;
-        this.directory = options.directory;
-        this.classToHandle = options.classToHandle;
-        this.extensions = new Set(options.extensions);
-        this.automateCategories = Boolean(options.automateCategories);
-        this.loadfilter = options.loadFilter;
+        this.directory = options?.directory;
+        this.classToHandle = options?.classToHandle;
+        this.extensions = new Set(options?.extensions);
+        this.automateCategories = Boolean(options?.automateCategories);
+        this.loadfilter = options?.loadFilter;
         this.modules = new Collection();
         this.categories = new Collection();
     }
@@ -69,7 +69,7 @@ export class SharkHandler extends EventEmitter {
         if (this.modules.has(mod.id))
             throw new SharkError('ALREADY_LOADED', this.classToHandle.constructor.name, mod.id);
         this.register(mod, isClass ? null : thing);
-        this.emit('eventLoaded', mod, isReload);
+        this.emit(SharkHandlerListeners.LOAD, mod, isReload);
         return mod;
     }
     loadAll(directory = this.directory, filter = this.loadfilter || ((file) => true)) {
@@ -87,7 +87,7 @@ export class SharkHandler extends EventEmitter {
         if (!mod)
             throw new SharkError('MODULE_NOT_FOUND', this.classToHandle.constructor.name, id);
         this.deregister(mod);
-        this.emit('removed', mod);
+        this.emit(SharkHandlerListeners.REMOVE, mod);
         return mod;
     }
     removeAll() {

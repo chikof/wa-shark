@@ -9,9 +9,9 @@ class Inhibitor extends SharkModule_1.SharkModule {
     priority;
     constructor(id, options) {
         super(id, { category: options.category });
-        this.reason = options.reason;
-        this.type = options.type;
-        this.priority = options.priority;
+        this.reason = options.reason || '';
+        this.type = options.type || 'post';
+        this.priority = options.priority || 0;
     }
     exec(message, command) {
         throw new util_1.SharkError('NOT_IMPLEMENTED', this.constructor.name, 'exec');

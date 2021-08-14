@@ -9,7 +9,7 @@ export declare class SharkModule {
     filepath: string;
     client: SharkClient;
     handler: SharkHandler;
-    constructor(id: string, options: SharkModuleOptions);
+    constructor(id: string, options?: SharkModuleOptions);
     reload(): any;
     remove(): SharkModule;
     toString(): string;

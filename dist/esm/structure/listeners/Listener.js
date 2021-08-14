@@ -6,7 +6,7 @@ export class Listener extends SharkModule {
     type;
     constructor(id, options) {
         super(id, { category: options.category });
-        this.emitter = options.emitter;
+        this.emitter = options.emitter || 'client';
         this.event = options.event || id;
         this.type = options.type || 'on';
     }

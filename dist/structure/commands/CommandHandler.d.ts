@@ -25,10 +25,10 @@ export declare class CommandHandler extends SharkHandler {
     register(command: Command, filepath: string): void;
     deregister(command: Command): void;
     runCooldowns(message: WAChatUpdate, command: Command): boolean;
-    runCommand(message: WAChatUpdate, command: Command, args: any): Promise<boolean>;
+    runCommand(message: WAChatUpdate, command: Command, args: string): Promise<boolean>;
     parseCommand(message: WAChatUpdate): Promise<ParsedComponentData>;
-    parseMultiplePrefixes(message: WAChatUpdate, pairs: [string, Set<string> | null][]): ParsedComponentData;
-    parseWithPrefix(message: WAChatUpdate, prefix: string, associatedCommands?: Set<string>): {
+    parseMultiplePrefixes(message: WAChatUpdate, pairs: [string, Set<string> | null][]): Promise<ParsedComponentData>;
+    parseWithPrefix(message: WAChatUpdate, prefix: string, associatedCommands?: Set<string>): Promise<{
         prefix?: undefined;
         alias?: undefined;
         content?: undefined;
@@ -46,12 +46,14 @@ export declare class CommandHandler extends SharkHandler {
         alias: string;
         content: string;
         afterPrefix: string;
-    };
+    }>;
     findCommand(name: string): Command;
     runAllTypeInhibitors(message: WAChatUpdate): Promise<boolean>;
     runPostTypeInhibitors(message: WAChatUpdate, command: Command): Promise<boolean>;
     runPreTypeInhibitors(message: WAChatUpdate): Promise<boolean>;
     parseCommandOverwrittenPrefixes(message: WAChatUpdate): Promise<ParsedComponentData>;
     useInhibitorHandler(inhibitorHandler: InhibitorHandler): this;
+    emitError(err: typeof Error, message: WAChatUpdate, command?: Command): void;
+    private fromJid;
 }
 export default CommandHandler;

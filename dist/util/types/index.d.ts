@@ -1,13 +1,13 @@
 /// <reference types="node" />
 import { WAChatUpdate } from '@adiwajshing/baileys';
 import { EventEmitter } from 'events';
-import { Command } from '../..';
+import { Command, SharkModule } from '../..';
 export interface SharkModuleOptions {
     category?: string;
 }
 export interface SharkHandlerOptions {
     automateCategories?: boolean;
-    classToHandle?: any;
+    classToHandle?: typeof SharkModule;
     directory: string;
     extensions?: string[] | Set<string>;
     loadFilter?: LoadPredicate;
@@ -19,7 +19,7 @@ export interface ListenerOptions extends SharkModuleOptions {
 }
 export interface InhibitorOptions extends SharkModuleOptions {
     reason?: string;
-    type?: string;
+    type?: InhibitorTypes;
     priority?: number;
 }
 export interface CommandOptions extends SharkModuleOptions {
@@ -59,7 +59,20 @@ export interface CooldownData {
     timer: NodeJS.Timer;
     uses: number;
 }
+export declare enum CommandHandlerListeners {
+    COMMAND_ERROR = "commandError",
+    COMMAND_COOLDOWN = "commandCooldown",
+    COMMAND_STARTED = "commandStarted",
+    COMMAND_FINISHED = "commandFinished",
+    COMMAND_BLOCKED = "commandBlocked",
+    MESSAGE_BLOCKED = "messageBlocked"
+}
+export declare enum SharkHandlerListeners {
+    LOAD = "load",
+    REMOVE = "remove"
+}
 export declare type IgnoreCheckPredicate = (message: WAChatUpdate, command: Command) => boolean;
 export declare type Prefix = (message: WAChatUpdate) => string | string[];
 export declare type IgnoreCooldownFuntion = (message: WAChatUpdate) => string | string[];
 export declare type LoadPredicate = (filepath?: string) => boolean;
+export declare type InhibitorTypes = 'pre' | 'post' | 'all';

@@ -1,6 +1,7 @@
 import { SharkHandler } from '../SharkHandler';
 import { Command } from './Command';
 import { Collection, SharkError, Util } from '../../util';
+import { CommandHandlerListeners, } from '../../util/types';
 const { intoArray, intoCallable, prefixCompare, flatMap } = Util;
 export class CommandHandler extends SharkHandler {
     aliases;
@@ -17,9 +18,8 @@ export class CommandHandler extends SharkHandler {
             directory: options.directory,
             extensions: options.extensions || ['.js', '.ts'],
         });
-        options.classToHandle = options.classToHandle || Command;
-        this.classToHandle = options.classToHandle;
-        if (options.classToHandle.constructor.prototype instanceof Command ||
+        this.classToHandle = options.classToHandle || Command;
+        if (options.classToHandle?.constructor?.prototype instanceof Command ||
             this.classToHandle.constructor.prototype === Command) {
             throw new SharkError('INVALID_CLASS_TO_HANDLE', this.classToHandle.constructor.name, Command.name);
         }
@@ -39,6 +39,8 @@ export class CommandHandler extends SharkHandler {
     }
     setup() {
         this.client.on('chat-update', (m) => {
+            if (!m.messages?.first)
+                return;
             this.handle(m);
         });
     }
@@ -61,7 +63,7 @@ export class CommandHandler extends SharkHandler {
                 this.runCommand(message, parsed.command, parsed.content);
         }
         catch (err) {
-            this.emit('COMMAND_ERROR', message);
+            this.emitError(err, message);
             return null;
         }
     }
@@ -150,9 +152,7 @@ export class CommandHandler extends SharkHandler {
     }
     runCooldowns(message, command) {
         const ignorer = command.ignoreCooldown || this.ignoreCooldown;
-        const id = /@s.whatsapp.net/g.test(message.jid)
-            ? message.jid
-            : message.messages.first.participant;
+        const id = this.fromJid(message);
         const isIgnored = Array.isArray(ignorer)
             ? ignorer.includes(message.jid)
             : typeof ignorer === 'function'
@@ -185,7 +185,7 @@ export class CommandHandler extends SharkHandler {
         if (entry.uses >= command.ratelimit) {
             const end = this.cooldowns.get(id)[command.id].end;
             const diff = end - Date.now() - 100;
-            this.emit('COMMAND_COOLDOWN', message, command, diff);
+            this.emit(CommandHandlerListeners.COMMAND_COOLDOWN, message, command, diff);
             return true;
         }
         entry.uses++;
@@ -194,42 +194,41 @@ export class CommandHandler extends SharkHandler {
     async runCommand(message, command, args) {
         if (await this.runPostTypeInhibitors(message, command))
             return false;
-        this.emit('COMMAND_STARTED', message, command, args);
+        this.emit(CommandHandlerListeners.COMMAND_STARTED, message, command, args);
         const ret = await command.exec(message, args);
-        this.emit('COMMAND_FINISHED', message, command, args, ret);
+        this.emit(CommandHandlerListeners.COMMAND_FINISHED, message, command, args, ret);
     }
     async parseCommand(message) {
         let prefixes = intoArray(await intoCallable(this.prefix)(message));
         const allowMention = await intoCallable(this.prefix)(message);
         if (allowMention) {
-            const mentions = [`@${this.client.user.jid}`];
+            const mentions = [
+                `@${this.client.user.name?.toLocaleLowerCase()}`,
+                `@${this.client.user.jid.replace(/@s.whatsapp.net/g, '')}`,
+            ];
             prefixes = [...mentions, ...prefixes];
         }
         prefixes.sort(prefixCompare);
-        return this.parseMultiplePrefixes(message, prefixes.map((p) => [p, null]));
+        return await this.parseMultiplePrefixes(message, prefixes.map((p) => [p, null]));
     }
-    parseMultiplePrefixes(message, pairs) {
-        const parses = pairs.map(([prefix, cmds]) => this.parseWithPrefix(message, prefix, cmds));
-        const result = parses.find((parsed) => parsed && parsed.command);
+    async parseMultiplePrefixes(message, pairs) {
+        const parses = await Promise.all(pairs.map(async ([prefix, cmds]) => await this.parseWithPrefix(message, prefix, cmds)));
+        const result = parses.find((parsed) => parsed?.command);
         if (result) {
             return result;
         }
-        const guess = parses.find((parsed) => parsed && parsed.prefix != null);
+        const guess = parses.find((parsed) => parsed?.prefix != null);
         if (guess) {
             return guess;
         }
         return {};
     }
-    parseWithPrefix(message, prefix, associatedCommands = null) {
-        if (!message.messages)
-            return;
+    async parseWithPrefix(message, prefix, associatedCommands = null) {
         const msg = message.messages.first.message;
-        if (!msg)
-            return;
-        const messageContent = msg.conversation ??
-            (msg.imageMessage && msg.imageMessage.caption) ??
-            (msg.videoMessage && msg.videoMessage.caption) ??
-            (msg.extendedTextMessage && msg.extendedTextMessage.text) ??
+        const messageContent = msg.imageMessage?.caption ??
+            msg.videoMessage?.caption ??
+            msg.extendedTextMessage?.text ??
+            msg.conversation ??
             '';
         const lowerContent = messageContent.toLowerCase();
         if (!lowerContent.startsWith(prefix.toLowerCase())) {
@@ -259,12 +258,12 @@ export class CommandHandler extends SharkHandler {
     }
     async runAllTypeInhibitors(message) {
         const reason = this.inhibitorHandler ? await this.inhibitorHandler.test('all', message) : null;
+        const id = this.fromJid(message);
         if (reason != null) {
-            this.emit('MESSAGE_BLOCKED', message, reason);
+            this.emit(CommandHandlerListeners.MESSAGE_BLOCKED, message, reason);
         }
-        else if (this.blockClient &&
-            message.messages.first.key.participant === this.client.user.jid) {
-            this.emit('MESSAGE_BLOCKED', message, 'Client');
+        else if (this.blockClient && id === this.client.user.jid) {
+            this.emit(CommandHandlerListeners.MESSAGE_BLOCKED, message, 'Client');
         }
         else {
             return false;
@@ -272,28 +271,27 @@ export class CommandHandler extends SharkHandler {
         return true;
     }
     async runPostTypeInhibitors(message, command) {
-        const msg = message.messages.first;
-        const id = /@s.whatsapp.net/g.test(message.jid) ? message.jid : msg.participant;
+        const id = this.fromJid(message);
         if (command.ownerOnly) {
             const isOwner = this.client.isOwner(id);
             if (!isOwner) {
-                this.emit('COMMAND_BLOCKED', message, command, 'Owner');
+                this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Owner');
                 return true;
             }
         }
         if (!command.allowGroups && message.jid.endsWith('@g.us')) {
-            this.emit('COMMAND_BLOCKED', message, command, 'Group');
+            this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group');
             return true;
         }
         if (!command.allowDM && !message.jid.endsWith('@g.us')) {
-            this.emit('COMMAND_BLOCKED', message, command, 'Private messages');
+            this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Private messages');
             return true;
         }
         const reason = this.inhibitorHandler
             ? await this.inhibitorHandler.test('post', message, command)
             : null;
         if (reason != null) {
-            this.emit('COMMAND_BLOCKED', message, command, reason);
+            this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, reason);
             return true;
         }
         if (this.runCooldowns(message, command)) {
@@ -304,7 +302,7 @@ export class CommandHandler extends SharkHandler {
     async runPreTypeInhibitors(message) {
         const reason = this.inhibitorHandler ? await this.inhibitorHandler.test('pre', message) : null;
         if (reason != null) {
-            this.emit('MESSAGE_BLOCKED', message, reason);
+            this.emit(CommandHandlerListeners.MESSAGE_BLOCKED, message, reason);
         }
         else {
             return false;
@@ -321,11 +319,21 @@ export class CommandHandler extends SharkHandler {
         });
         const pairs = flatMap(await Promise.all(promises), (x) => x);
         pairs.sort(([a], [b]) => prefixCompare(a, b));
-        return this.parseMultiplePrefixes(message, pairs);
+        return await this.parseMultiplePrefixes(message, pairs);
     }
     useInhibitorHandler(inhibitorHandler) {
         this.inhibitorHandler = inhibitorHandler;
         return this;
+    }
+    emitError(err, message, command) {
+        if (this.listenerCount(CommandHandlerListeners.COMMAND_ERROR)) {
+            this.emit(CommandHandlerListeners.COMMAND_ERROR, err, message, command);
+            return;
+        }
+        throw err;
+    }
+    fromJid(message) {
+        return /@s.whatsapp.net/g.test(message.jid) ? message.jid : message.messages.first.participant;
     }
 }
 export default CommandHandler;

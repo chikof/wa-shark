@@ -5,6 +5,7 @@ const events_1 = require("events");
 const path_1 = require("path");
 const fs_1 = require("fs");
 const util_1 = require("../util");
+const types_1 = require("../util/types");
 class SharkHandler extends events_1.EventEmitter {
     client;
     directory;
@@ -16,13 +17,12 @@ class SharkHandler extends events_1.EventEmitter {
     categories;
     constructor(client, options) {
         super();
-        options = options || {};
         this.client = client;
-        this.directory = options.directory;
-        this.classToHandle = options.classToHandle;
-        this.extensions = new Set(options.extensions);
-        this.automateCategories = Boolean(options.automateCategories);
-        this.loadfilter = options.loadFilter;
+        this.directory = options?.directory;
+        this.classToHandle = options?.classToHandle;
+        this.extensions = new Set(options?.extensions);
+        this.automateCategories = Boolean(options?.automateCategories);
+        this.loadfilter = options?.loadFilter;
         this.modules = new util_1.Collection();
         this.categories = new util_1.Collection();
     }
@@ -72,7 +72,7 @@ class SharkHandler extends events_1.EventEmitter {
         if (this.modules.has(mod.id))
             throw new util_1.SharkError('ALREADY_LOADED', this.classToHandle.constructor.name, mod.id);
         this.register(mod, isClass ? null : thing);
-        this.emit('eventLoaded', mod, isReload);
+        this.emit(types_1.SharkHandlerListeners.LOAD, mod, isReload);
         return mod;
     }
     loadAll(directory = this.directory, filter = this.loadfilter || ((file) => true)) {
@@ -90,7 +90,7 @@ class SharkHandler extends events_1.EventEmitter {
         if (!mod)
             throw new util_1.SharkError('MODULE_NOT_FOUND', this.classToHandle.constructor.name, id);
         this.deregister(mod);
-        this.emit('removed', mod);
+        this.emit(types_1.SharkHandlerListeners.REMOVE, mod);
         return mod;
     }
     removeAll() {

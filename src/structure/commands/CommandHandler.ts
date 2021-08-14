@@ -13,6 +13,7 @@ import {
   IgnoreCooldownFuntion,
   ParsedComponentData,
   Prefix,
+  CommandHandlerListeners,
 } from '../../util/types';
 
 const { intoArray, intoCallable, prefixCompare, flatMap } = Util;
@@ -37,10 +38,9 @@ export class CommandHandler extends SharkHandler {
       extensions: options.extensions || ['.js', '.ts'],
     });
 
-    options.classToHandle = options.classToHandle || Command;
-    this.classToHandle = options.classToHandle;
+    this.classToHandle = options.classToHandle || Command;
     if (
-      options.classToHandle.constructor.prototype instanceof Command ||
+      options.classToHandle?.constructor?.prototype instanceof Command ||
       this.classToHandle.constructor.prototype === Command
     ) {
       throw new SharkError(
@@ -76,6 +76,7 @@ export class CommandHandler extends SharkHandler {
 
   public setup() {
     this.client.on('chat-update', (m) => {
+      if (!m.messages?.first) return;
       this.handle(m);
     });
   }
@@ -101,7 +102,7 @@ export class CommandHandler extends SharkHandler {
 
       if (parsed.command) this.runCommand(message, parsed.command, parsed.content);
     } catch (err) {
-      this.emit('COMMAND_ERROR', message);
+      this.emitError(err, message);
       return null;
     }
   }
@@ -196,9 +197,7 @@ export class CommandHandler extends SharkHandler {
   public runCooldowns(message: WAChatUpdate, command: Command) {
     const ignorer = command.ignoreCooldown || this.ignoreCooldown;
 
-    const id = /@s.whatsapp.net/g.test(message.jid)
-      ? message.jid
-      : message.messages.first.participant;
+    const id = this.fromJid(message);
 
     const isIgnored = Array.isArray(ignorer)
       ? ignorer.includes(message.jid)
@@ -239,7 +238,7 @@ export class CommandHandler extends SharkHandler {
       const end = this.cooldowns.get(id)[command.id].end;
       const diff = end - Date.now() - 100;
 
-      this.emit('COMMAND_COOLDOWN', message, command, diff);
+      this.emit(CommandHandlerListeners.COMMAND_COOLDOWN, message, command, diff);
       return true;
     }
 
@@ -247,11 +246,11 @@ export class CommandHandler extends SharkHandler {
     return false;
   }
 
-  async runCommand(message: WAChatUpdate, command: Command, args: any) {
+  async runCommand(message: WAChatUpdate, command: Command, args: string) {
     if (await this.runPostTypeInhibitors(message, command)) return false;
-    this.emit('COMMAND_STARTED', message, command, args);
+    this.emit(CommandHandlerListeners.COMMAND_STARTED, message, command, args);
     const ret = await command.exec(message, args);
-    this.emit('COMMAND_FINISHED', message, command, args, ret);
+    this.emit(CommandHandlerListeners.COMMAND_FINISHED, message, command, args, ret);
   }
 
   public async parseCommand(message: WAChatUpdate) {
@@ -259,29 +258,34 @@ export class CommandHandler extends SharkHandler {
     const allowMention = await intoCallable(this.prefix)(message);
 
     if (allowMention) {
-      const mentions = [`@${this.client.user.jid}`];
+      const mentions = [
+        `@${this.client.user.name?.toLocaleLowerCase()}`,
+        `@${this.client.user.jid.replace(/@s.whatsapp.net/g, '')}`,
+      ];
       prefixes = [...mentions, ...prefixes];
     }
 
     prefixes.sort(prefixCompare);
-    return this.parseMultiplePrefixes(
+    return await this.parseMultiplePrefixes(
       message,
       prefixes.map((p) => [p, null]),
     );
   }
 
-  public parseMultiplePrefixes(
+  public async parseMultiplePrefixes(
     message: WAChatUpdate,
     pairs: [string, Set<string> | null][],
-  ): ParsedComponentData {
-    const parses = pairs.map(([prefix, cmds]) => this.parseWithPrefix(message, prefix, cmds));
-    const result = parses.find((parsed) => parsed && parsed.command);
+  ): Promise<ParsedComponentData> {
+    const parses = await Promise.all(
+      pairs.map(async ([prefix, cmds]) => await this.parseWithPrefix(message, prefix, cmds)),
+    );
 
+    const result = parses.find((parsed) => parsed?.command);
     if (result) {
       return result;
     }
 
-    const guess = parses.find((parsed) => parsed && parsed.prefix != null);
+    const guess = parses.find((parsed) => parsed?.prefix != null);
     if (guess) {
       return guess;
     }
@@ -289,22 +293,18 @@ export class CommandHandler extends SharkHandler {
     return {};
   }
 
-  public parseWithPrefix(
+  public async parseWithPrefix(
     message: WAChatUpdate,
     prefix: string,
     associatedCommands: Set<string> = null,
   ) {
-    if (!message.messages) return;
-
     const msg = message.messages.first.message;
 
-    if (!msg) return;
-
     const messageContent =
+      msg.imageMessage?.caption ??
+      msg.videoMessage?.caption ??
+      msg.extendedTextMessage?.text ??
       msg.conversation ??
-      (msg.imageMessage && msg.imageMessage.caption) ??
-      (msg.videoMessage && msg.videoMessage.caption) ??
-      (msg.extendedTextMessage && msg.extendedTextMessage.text) ??
       '';
 
     const lowerContent = messageContent.toLowerCase();
@@ -341,14 +341,12 @@ export class CommandHandler extends SharkHandler {
 
   public async runAllTypeInhibitors(message: WAChatUpdate) {
     const reason = this.inhibitorHandler ? await this.inhibitorHandler.test('all', message) : null;
+    const id = this.fromJid(message);
 
     if (reason != null) {
-      this.emit('MESSAGE_BLOCKED', message, reason);
-    } else if (
-      this.blockClient &&
-      message.messages.first.key.participant === this.client.user.jid
-    ) {
-      this.emit('MESSAGE_BLOCKED', message, 'Client');
+      this.emit(CommandHandlerListeners.MESSAGE_BLOCKED, message, reason);
+    } else if (this.blockClient && id === this.client.user.jid) {
+      this.emit(CommandHandlerListeners.MESSAGE_BLOCKED, message, 'Client');
     } else {
       return false;
     }
@@ -357,24 +355,24 @@ export class CommandHandler extends SharkHandler {
   }
 
   public async runPostTypeInhibitors(message: WAChatUpdate, command: Command) {
-    const msg = message.messages.first;
-    const id = /@s.whatsapp.net/g.test(message.jid) ? message.jid : msg.participant;
+    const id = this.fromJid(message);
+
     if (command.ownerOnly) {
       const isOwner = this.client.isOwner(id);
 
       if (!isOwner) {
-        this.emit('COMMAND_BLOCKED', message, command, 'Owner');
+        this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Owner');
         return true;
       }
     }
 
     if (!command.allowGroups && message.jid.endsWith('@g.us')) {
-      this.emit('COMMAND_BLOCKED', message, command, 'Group');
+      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group');
       return true;
     }
 
     if (!command.allowDM && !message.jid.endsWith('@g.us')) {
-      this.emit('COMMAND_BLOCKED', message, command, 'Private messages');
+      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Private messages');
       return true;
     }
 
@@ -383,7 +381,7 @@ export class CommandHandler extends SharkHandler {
       : null;
 
     if (reason != null) {
-      this.emit('COMMAND_BLOCKED', message, command, reason);
+      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, reason);
       return true;
     }
 
@@ -398,7 +396,7 @@ export class CommandHandler extends SharkHandler {
     const reason = this.inhibitorHandler ? await this.inhibitorHandler.test('pre', message) : null;
 
     if (reason != null) {
-      this.emit('MESSAGE_BLOCKED', message, reason);
+      this.emit(CommandHandlerListeners.MESSAGE_BLOCKED, message, reason);
     } else {
       return false;
     }
@@ -418,13 +416,26 @@ export class CommandHandler extends SharkHandler {
 
     const pairs = flatMap(await Promise.all(promises), (x) => x);
     pairs.sort(([a], [b]) => prefixCompare(a, b));
-    return this.parseMultiplePrefixes(message, pairs);
+    return await this.parseMultiplePrefixes(message, pairs);
   }
 
   public useInhibitorHandler(inhibitorHandler: InhibitorHandler) {
     this.inhibitorHandler = inhibitorHandler;
 
     return this;
+  }
+
+  public emitError(err: typeof Error, message: WAChatUpdate, command?: Command) {
+    if (this.listenerCount(CommandHandlerListeners.COMMAND_ERROR)) {
+      this.emit(CommandHandlerListeners.COMMAND_ERROR, err, message, command);
+      return;
+    }
+
+    throw err;
+  }
+
+  private fromJid(message: WAChatUpdate) {
+    return /@s.whatsapp.net/g.test(message.jid) ? message.jid : message.messages.first.participant;
   }
 }
 

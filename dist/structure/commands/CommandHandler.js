@@ -228,6 +228,8 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
     }
     async parseWithPrefix(message, prefix, associatedCommands = null) {
         const msg = message.messages.first.message;
+        if (!msg)
+            return;
         const messageContent = msg.imageMessage?.caption ??
             msg.videoMessage?.caption ??
             msg.extendedTextMessage?.text ??

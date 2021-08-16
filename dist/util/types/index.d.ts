@@ -24,15 +24,19 @@ export interface InhibitorOptions extends SharkModuleOptions {
 }
 export interface CommandOptions extends SharkModuleOptions {
     alias: string[];
-    allowDM?: boolean;
-    allowGroups?: boolean;
     cooldown?: number;
-    ignoreCooldown?: string | string[] | IgnoreCheckPredicate;
     ratelimit?: number;
-    ownerOnly?: boolean;
     prefix?: string | string[];
     description?: {
         [x: string]: any;
+    };
+    filters?: {
+        botOwner?: boolean;
+        allowDM?: boolean;
+        allowGroups?: boolean;
+        ignoreCooldown?: string | string[] | IgnoreCheckPredicate;
+        groupAdmin?: boolean;
+        groupOwner?: boolean;
     };
 }
 export interface SharkClientOptions {

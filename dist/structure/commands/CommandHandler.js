@@ -154,7 +154,7 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
         super.deregister(command);
     }
     runCooldowns(message, command) {
-        const ignorer = command.ignoreCooldown || this.ignoreCooldown;
+        const ignorer = command.filters?.ignoreCooldown || this.ignoreCooldown;
         const id = this.fromJid(message);
         const isIgnored = Array.isArray(ignorer)
             ? ignorer.includes(message.jid)
@@ -163,7 +163,7 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
                 : id === ignorer;
         if (isIgnored)
             return false;
-        const time = command.cooldown ?? this.defaultCooldown;
+        const time = command.cooldown || this.defaultCooldown;
         if (!time)
             return false;
         const endTime = Date.now() - 100 + time;
@@ -230,10 +230,10 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
         const msg = message.messages.first.message;
         if (!msg)
             return;
-        const messageContent = msg.imageMessage?.caption ??
-            msg.videoMessage?.caption ??
-            msg.extendedTextMessage?.text ??
-            msg.conversation ??
+        const messageContent = msg.imageMessage?.caption ||
+            msg.videoMessage?.caption ||
+            msg.extendedTextMessage?.text ||
+            msg.conversation ||
             '';
         const lowerContent = messageContent.toLowerCase();
         if (!lowerContent.startsWith(prefix.toLowerCase())) {
@@ -277,19 +277,45 @@ class CommandHandler extends SharkHandler_1.SharkHandler {
     }
     async runPostTypeInhibitors(message, command) {
         const id = this.fromJid(message);
-        if (command.ownerOnly) {
+        const { botOwner, allowDM, allowGroups, groupAdmin, groupOwner } = command.filters;
+        const { participant } = message.messages.first;
+        if (botOwner) {
             const isOwner = this.client.isOwner(id);
             if (!isOwner) {
-                this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Owner');
+                this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Owner only');
                 return true;
             }
         }
-        if (!command.allowGroups && message.jid.endsWith('@g.us')) {
-            this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group');
+        if (!allowGroups && message.jid.endsWith('@g.us')) {
+            this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group message');
             return true;
         }
-        if (!command.allowDM && !message.jid.endsWith('@g.us')) {
-            this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Private messages');
+        if (allowGroups && (groupAdmin || groupOwner)) {
+            if (message.jid.endsWith('@g.us')) {
+                const group = await this.client.groupMetadata(message.jid);
+                const { isAdmin, isSuperAdmin } = group.participants.find((u) => u.jid == participant);
+                if (groupAdmin && !isAdmin) {
+                    this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group admin only');
+                    return true;
+                }
+                if (groupOwner && !isSuperAdmin) {
+                    this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group owner only');
+                    return true;
+                }
+            }
+            else {
+                if (groupAdmin) {
+                    this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group admin only');
+                    return true;
+                }
+                if (groupOwner) {
+                    this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group owner only');
+                    return true;
+                }
+            }
+        }
+        if (!allowDM && !message.jid.endsWith('@g.us')) {
+            this.emit(types_1.CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Private message');
             return true;
         }
         const reason = this.inhibitorHandler

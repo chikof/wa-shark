@@ -3,15 +3,19 @@ import { SharkModule } from '../SharkModule';
 import { CommandOptions, IgnoreCheckPredicate } from '../../util/types';
 export declare class Command extends SharkModule {
     aliases: string[] | [];
-    allowDM: boolean;
-    allowGroups: boolean;
     prefix: string | string[];
-    ownerOnly: boolean;
     cooldown: number;
     ratelimit: number;
-    ignoreCooldown: string | string[] | IgnoreCheckPredicate;
     description: {
         [x: string]: any;
+    };
+    filters: {
+        botOwner?: boolean;
+        allowDM?: boolean;
+        allowGroups?: boolean;
+        ignoreCooldown?: string | string[] | IgnoreCheckPredicate;
+        groupAdmin?: boolean;
+        groupOwner?: boolean;
     };
     constructor(id: string, options: CommandOptions);
     exec(message: WAChatUpdate, args?: any): Promise<any>;

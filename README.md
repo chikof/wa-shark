@@ -4,9 +4,13 @@
 
 ## Features
 
-- Fixed bug when reading a message replied with an attachment.
-- Example of inhibitor handler.
-- Below you can see the list of events.
+- New command filters added
+  - botOwner
+  - allowDM
+  - allowGroups
+  - ignoreCooldown
+  - groupAdmin
+  - groupOwner
 
 <br>
 
@@ -47,7 +51,9 @@ export class Client extends SharkClient {
     directory: join(__dirname, 'listeners', 'path'),
   });
 
-  public inhibitorHandler: InhibitorHandler = new InhibitorHandler(this, {});
+  public inhibitorHandler: InhibitorHandler = new InhibitorHandler(this, {
+    directory: join(__dirname, 'inhibitors', 'path'),
+  });
 
   private async _int(): Promise<void> {
     this.listenerHandler

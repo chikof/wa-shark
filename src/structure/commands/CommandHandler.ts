@@ -195,7 +195,7 @@ export class CommandHandler extends SharkHandler {
   }
 
   public runCooldowns(message: WAChatUpdate, command: Command) {
-    const ignorer = command.ignoreCooldown || this.ignoreCooldown;
+    const ignorer = command.filters?.ignoreCooldown || this.ignoreCooldown;
 
     const id = this.fromJid(message);
 
@@ -207,7 +207,7 @@ export class CommandHandler extends SharkHandler {
 
     if (isIgnored) return false;
 
-    const time = command.cooldown ?? this.defaultCooldown;
+    const time = command.cooldown || this.defaultCooldown;
     if (!time) return false;
 
     const endTime = Date.now() - 100 + time;
@@ -303,10 +303,10 @@ export class CommandHandler extends SharkHandler {
     if (!msg) return;
 
     const messageContent =
-      msg.imageMessage?.caption ??
-      msg.videoMessage?.caption ??
-      msg.extendedTextMessage?.text ??
-      msg.conversation ??
+      msg.imageMessage?.caption ||
+      msg.videoMessage?.caption ||
+      msg.extendedTextMessage?.text ||
+      msg.conversation ||
       '';
 
     const lowerContent = messageContent.toLowerCase();
@@ -358,23 +358,52 @@ export class CommandHandler extends SharkHandler {
 
   public async runPostTypeInhibitors(message: WAChatUpdate, command: Command) {
     const id = this.fromJid(message);
+    const { botOwner, allowDM, allowGroups, groupAdmin, groupOwner } = command.filters;
+    const { participant } = message.messages.first;
 
-    if (command.ownerOnly) {
+    if (botOwner) {
       const isOwner = this.client.isOwner(id);
 
       if (!isOwner) {
-        this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Owner');
+        this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Owner only');
         return true;
       }
     }
 
-    if (!command.allowGroups && message.jid.endsWith('@g.us')) {
-      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group');
+    if (!allowGroups && message.jid.endsWith('@g.us')) {
+      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group message');
       return true;
     }
 
-    if (!command.allowDM && !message.jid.endsWith('@g.us')) {
-      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Private messages');
+    if (allowGroups && (groupAdmin || groupOwner)) {
+      if (message.jid.endsWith('@g.us')) {
+        const group = await this.client.groupMetadata(message.jid);
+        const { isAdmin, isSuperAdmin } = group.participants.find((u) => u.jid == participant);
+
+        if (groupAdmin && !isAdmin) {
+          this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group admin only');
+          return true;
+        }
+
+        if (groupOwner && !isSuperAdmin) {
+          this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group owner only');
+          return true;
+        }
+      } else {
+        if (groupAdmin) {
+          this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group admin only');
+          return true;
+        }
+
+        if (groupOwner) {
+          this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Group owner only');
+          return true;
+        }
+      }
+    }
+
+    if (!allowDM && !message.jid.endsWith('@g.us')) {
+      this.emit(CommandHandlerListeners.COMMAND_BLOCKED, message, command, 'Private message');
       return true;
     }
 

@@ -9,7 +9,7 @@ export class Command extends SharkModule {
     filters;
     constructor(id, options) {
         super(id, { category: options.category });
-        const { allowDM, botOwner, allowGroups, groupAdmin, groupOwner, ignoreCooldown } = options?.filters;
+        const { allowDM, botOwner, allowGroups, groupAdmin, groupOwner, ignoreCooldown } = options.filters || {};
         this.aliases = options.alias || [];
         this.cooldown = options.cooldown;
         this.ratelimit = options.ratelimit;

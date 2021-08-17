@@ -24,7 +24,7 @@ export class Command extends SharkModule {
     super(id, { category: options.category });
 
     const { allowDM, botOwner, allowGroups, groupAdmin, groupOwner, ignoreCooldown } =
-      options?.filters;
+      options.filters || {};
 
     this.aliases = options.alias || [];
 
